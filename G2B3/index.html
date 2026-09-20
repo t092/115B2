@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商周至隋唐的國家與社會 - 歷史重點講義與互動作業</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Identity Services (GIS) 學生帳號登入 SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <!-- 音效靜音控制 -->
+  <button id="soundToggleBtn" class="sound-toggle-btn" title="切換音效">
+    <span id="soundIcon">🔊</span>
+  </button>
+
+  <!-- 頂部導航與學生資訊 -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="brand">
+        <span class="brand-badge">國中歷史二上 第1課</span>
+        <h1 class="main-title">🏰 商周至隋唐的國家與社會</h1>
+        <p class="subtitle">課本重點講義 ✕ 自動跳轉闖關作業</p>
+      </div>
+
+      <!-- 學生資訊卡 -->
+      <div class="student-bar">
+        <div class="input-group">
+          <label for="studentClass">班級</label>
+          <input type="text" id="studentClass" placeholder="如 201" value="201">
+        </div>
+        <div class="input-group">
+          <label for="studentSeat">座號</label>
+          <input type="number" id="studentSeat" placeholder="座號" value="1">
+        </div>
+        <div class="input-group">
+          <label for="studentName">姓名</label>
+          <input type="text" id="studentName" placeholder="請輸入姓名" value="歷史探險家">
+        </div>
+        <div class="score-pill">
+          <span class="star-icon">⭐</span>
+          <span id="totalStars">0</span> 星
+          <span class="divider">|</span>
+          <span class="coin-icon">🪙</span>
+          <span id="totalScore">0</span> 分
+        </div>
+      </div>
+    </div>
+
+    <!-- 頂部頁籤：只保留「課本重點講義」與「學習成就與證書」 -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-handout" id="tabBtnHandout">
+        <span class="tab-icon">📖</span>
+        <span class="tab-text">課本重點講義 (閱讀區)</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-summary" id="tabBtnSummary">
+        <span class="tab-icon">🏆</span>
+        <span class="tab-text">學習成就與證書</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- 主內容容器 -->
+  <main class="main-container">
+
+    <!-- ==================== 頁籤 1：課本重點講義 (預設進入) ==================== -->
+    <section id="tab-handout" class="tab-pane active">
+      <!-- 頂部告示與列印按鈕 -->
+      <div class="handout-banner">
+        <div class="handout-banner-text">
+          <h2>📚 課堂重點精華講義</h2>
+          <div class="notice-badge">⚠️ 請仔細閱讀講義</div>
+          <p>掌握西周封建、春秋戰國變革、秦代郡縣與歷代選才演進，複習完畢後可點選下方按鈕開始挑戰！</p>
+        </div>
+        <div class="handout-banner-actions">
+          <button class="print-handout-btn" onclick="printHandout()">
+            🖨️ 列印講義
+          </button>
+        </div>
+      </div>
+
+      <!-- 講義單元一 -->
+      <article class="handout-article" id="printableHandoutContent">
+        <div class="article-header">
+          <span class="unit-badge">核心主題 1</span>
+          <h3>從古典封建到郡縣帝國（政治體制轉變）</h3>
+        </div>
+
+        <div class="lecture-cards-grid">
+          <!-- 卡片 1 -->
+          <div class="lecture-card">
+            <div class="card-icon">🛡️</div>
+            <h4>一、商與西周的封建社會</h4>
+            <ul>
+              <li><strong>商朝特性</strong>：屬於「部落聯盟」，商王名義上為共主，但對各地控制力鬆散。</li>
+              <li><strong>西周封建目的</strong>：周滅商後，為<strong>鞏固新征服地</strong>與<strong>保衛王室安全</strong>，將土地與人民分封給<strong>親戚</strong>與<strong>功臣</strong>（諸侯）。</li>
+              <li><strong>封建兩大基石</strong>：
+                <ul>
+                  <li><strong>宗法制度</strong>：以<strong>血緣親疏</strong>分尊卑，<strong>嫡長子繼承</strong>大宗，維持世襲階級。</li>
+                  <li><strong>禮樂制度</strong>：規範各級貴族使用的器物（如青銅編鐘、鼎）與禮儀，<strong>彰顯身分等第</strong>。</li>
+                </ul>
+              </li>
+              <li><strong>社會結構</strong>：貴族掌握政治教育特權（<strong>世卿世祿</strong>），平民與奴隸無法參政。</li>
+            </ul>
+          </div>
+
+          <!-- 卡片 2 -->
+          <div class="lecture-card">
+            <div class="card-icon">⚔️</div>
+            <h4>二、封建崩解與春秋戰國的大變革</h4>
+            <ul>
+              <li><strong>封建崩解原因</strong>：諸侯血緣漸漸疏遠；犬戎入侵平王東遷洛邑（東周開始），天子威信盡失。</li>
+              <li><strong>私人講學興起</strong>：貴族流落民間辦學宣講（以<strong>孔子</strong>為代表），打破官府壟斷教育，平民受教機會增加。</li>
+              <li><strong>布衣卿相</strong>：戰國列國競爭激烈，為求富國強兵唯才是用，平民亦能憑才能封相拜將。</li>
+              <li><strong>商鞅變法（秦國富強基石）</strong>：
+                <ul>
+                  <li><strong>按軍功授爵</strong>：削弱無功勞的舊世襲貴族。</li>
+                  <li><strong>厲行法治</strong>：嚴格以法律規範臣民，賞罰分明，加強國家控制。</li>
+                  <li><strong>編列戶籍（★必考考點）</strong>：五家為伍、十家為什連坐；真正目的是為了利於國家<strong>徵兵、徵稅與調發勞役</strong>！</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+
+          <!-- 卡片 3 -->
+          <div class="lecture-card">
+            <div class="card-icon">👑</div>
+            <h4>三、秦代中央集權帝國的確立</h4>
+            <ul>
+              <li><strong>創立帝制</strong>：西元前221年，秦王嬴政兼併六國，自稱「<strong>始皇帝</strong>」。</li>
+              <li><strong>廢封建，行郡縣</strong>：全國全面推行<strong>郡縣制</strong>，郡守與縣令由<strong>中央直接任免，不得世襲</strong>。</li>
+              <li><strong>統一文物制度</strong>：統一<strong>文字（小篆，書同文）</strong>、<strong>貨幣（秦半兩錢）</strong>、<strong>度量衡</strong>、<strong>車軌（車同軌）</strong>；修築以咸陽為中心的馳道。</li>
+              <li><strong>秦亡與影響</strong>：法律嚴苛殘酷、大興土木（長城、兵馬俑）勞民傷財而速亡；但其確立的<strong>中央集權郡縣體制為後世沿用兩千年（漢承秦制）</strong>。</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 封建 vs 郡縣 必考對比表 -->
+        <div class="compare-table-box">
+          <h4>🌟【考前必背】封建制度 vs. 郡縣制度 超級比一比</h4>
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>比較項目</th>
+                <th>封建制度（西周）</th>
+                <th>郡縣制度（秦代以後）</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>最高領導者</strong></td>
+                <td>周天子（名義上的天下共主）</td>
+                <td>皇帝（中央集權，總攬最高軍政大權）</td>
+              </tr>
+              <tr>
+                <td><strong>地方管轄方式</strong></td>
+                <td><strong>間接統治</strong>（天子管王畿，諸侯管封國）</td>
+                <td><strong>垂直直接統治</strong>（皇帝 → 郡 → 縣）</td>
+              </tr>
+              <tr>
+                <td><strong>官員任命與繼承</strong></td>
+                <td><strong>分封、世代世襲</strong>（傳子或傳嫡）</td>
+                <td><strong>由中央直接任免，絕對不得世襲</strong></td>
+              </tr>
+              <tr>
+                <td><strong>制度利弊分析</strong></td>
+                <td>以親戚為藩籬屏障王室；但久後血緣淡薄，地方諸侯坐大易分裂割據。</td>
+                <td>消除地方割據威脅，行政效率高；但缺乏宗室外藩屏障，遇權臣篡位易孤立。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="article-header" style="margin-top: 36px;">
+          <span class="unit-badge">核心主題 2</span>
+          <h3>誰能當官？古代選才制度大演變（階層流動）</h3>
+        </div>
+
+        <div class="lecture-cards-grid four-col">
+          <!-- 漢代 -->
+          <div class="lecture-card">
+            <div class="card-icon">🏛️</div>
+            <h4>1. 漢代：察舉與太學</h4>
+            <ul>
+              <li><strong>察舉制</strong>：地方官定期向中央推舉「<strong>孝子</strong>」與「<strong>廉吏</strong>」（孝廉）。</li>
+              <li><strong>設立太學</strong>：漢武帝設太學教授<strong>儒家五經</strong>，合格者任官。</li>
+              <li><strong>深遠影響</strong>：確立儒學主流；士人將經學家傳，形成「<strong>經學傳家、累世當官</strong>」的世家大族（世族雛形）。</li>
+            </ul>
+          </div>
+
+          <!-- 魏晉南北朝 -->
+          <div class="lecture-card">
+            <div class="card-icon">🏰</div>
+            <h4>2. 魏晉南北朝：九品官人</h4>
+            <ul>
+              <li><strong>背景</strong>：東漢末戰亂戶口殘破，曹魏為掌握人才任用權而推行。</li>
+              <li><strong>評定標準</strong>：派「<strong>中正官</strong>」依家世、才能、品德評九品以授官。</li>
+              <li><strong>流弊與特權</strong>：中正官皆世族，只看家世；形成「<strong>上品無寒門，下品無世族</strong>」；世族享免稅免役特權（如東晉「<strong>王與馬共天下</strong>」）。</li>
+            </ul>
+          </div>
+
+          <!-- 隋唐至清末 -->
+          <div class="lecture-card">
+            <div class="card-icon">📜</div>
+            <h4>3. 隋唐至清末：科舉制度</h4>
+            <ul>
+              <li><strong>創立目的</strong>：隋朝為維繫政權，<strong>削弱世族勢力</strong>、加強皇權。</li>
+              <li><strong>選才特色</strong>：以<strong>公開分科考試</strong>選才，士人自行報名，憑成績任官。</li>
+              <li><strong>歷史意義</strong>：提升平民任官機會，<strong>促進社會階層流動</strong>，帶動全社會讀書風氣，沿用至清末1905年。</li>
+            </ul>
+          </div>
+
+          <!-- 記憶口訣 -->
+          <div class="lecture-card mnemonic-card">
+            <div class="card-icon">💡</div>
+            <h4>4. 考前超強記憶口訣</h4>
+            <div class="mnemonic-body">
+              <p><strong>西周</strong>看投胎（血緣世襲）</p>
+              <p><strong>東周</strong>看戰功（布衣卿相）</p>
+              <p><strong>漢代</strong>看名氣（孝廉五經）</p>
+              <p><strong>魏晉</strong>看爸爸（九品門第）</p>
+              <p><strong>隋唐</strong>看實力（科舉考試）</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 選才彙整表 -->
+        <div class="compare-table-box">
+          <h4>🌟【考前必背】中國古代選才制度大彙整</h4>
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>朝代／時期</th>
+                <th>選才制度</th>
+                <th>選拔標準與核心機制</th>
+                <th>對社會階層與政治的影響</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>西周</strong></td>
+                <td><strong>世卿世祿制</strong></td>
+                <td>宗法血緣（世襲）</td>
+                <td>貴族獨占教育與政治，階級完全不可流動。</td>
+              </tr>
+              <tr>
+                <td><strong>東周（戰國）</strong></td>
+                <td><strong>布衣卿相／軍功授爵</strong></td>
+                <td>個人才能、戰場立功</td>
+                <td>平民可拜相入仕，舊貴族沒落，階層開始流動。</td>
+              </tr>
+              <tr>
+                <td><strong>漢代</strong></td>
+                <td><strong>察舉制、太學</strong></td>
+                <td>推舉<strong>孝廉</strong>、考核<strong>儒家五經</strong></td>
+                <td>儒學成為主流，逐漸形成<strong>經學傳家</strong>的世家大族。</td>
+              </tr>
+              <tr>
+                <td><strong>魏晉南北朝</strong></td>
+                <td><strong>九品官人之法</strong></td>
+                <td>中正官評定九品等第</td>
+                <td><strong>上品無寒門，下品無世族</strong>；世族壟斷政權，階級僵化。</td>
+              </tr>
+              <tr>
+                <td><strong>隋唐～清末</strong></td>
+                <td><strong>科舉制度</strong></td>
+                <td>分科公開考試（成績錄取）</td>
+                <td>打破世族壟斷，<strong>促進社會階層流動</strong>，帶動讀書風氣。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <!-- 講義底部整合為單一「開始挑戰」按鈕 -->
+      <div class="handout-footer-cta">
+        <h3>🎯 講義閱讀完畢，準備好接受挑戰了嗎？</h3>
+        <p>按下「開始挑戰」後將直接進入連貫練習題並開始計時，每完成一個關卡將自動跳轉到下一關！</p>
+        <button class="primary-btn super-big-btn" onclick="startFullChallenge()">
+          🚀 開始挑戰！
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== 練習挑戰模式容器 (自動流暢過關) ==================== -->
+    <section id="tab-challenge" class="tab-pane">
+      <!-- 練習狀態工具列 -->
+      <div class="exercise-statusbar">
+        <div class="status-col">
+          <span class="status-label">當前挑戰進度</span>
+          <strong class="status-value" id="currentStageTitle">關卡 1：揭曉方塊</strong>
+        </div>
+        <div class="status-col timer-col">
+          <span class="status-label">⏱️ 挑戰總耗時</span>
+          <strong class="status-value timer-display" id="challengeTimerText">00:00</strong>
+        </div>
+        <div class="status-col">
+          <span class="status-label">🪙 累積得分</span>
+          <strong class="status-value" id="challengeScoreText">0</strong> 分
+        </div>
+        <div class="status-col">
+          <button class="back-handout-btn" onclick="returnToHandout()">📖 中途查看講義</button>
+        </div>
+      </div>
+
+      <!-- 自動過關進度指示條 -->
+      <div class="stage-stepper">
+        <div class="step-item active" id="stepIndicator1">
+          <div class="step-circle">1</div>
+          <span class="step-name">揭曉方塊</span>
+        </div>
+        <div class="step-line" id="stepLine1"></div>
+        <div class="step-item" id="stepIndicator2">
+          <div class="step-circle">2</div>
+          <span class="step-name">時空迷宮</span>
+        </div>
+        <div class="step-line" id="stepLine2"></div>
+        <div class="step-item" id="stepIndicator3">
+          <div class="step-circle">3</div>
+          <span class="step-name">天命轉盤</span>
+        </div>
+        <div class="step-line" id="stepLine3"></div>
+        <div class="step-item" id="stepIndicator4">
+          <div class="step-circle">4</div>
+          <span class="step-name">殿試問答</span>
+        </div>
+        <div class="step-line" id="stepLine4"></div>
+        <div class="step-item" id="stepIndicator5">
+          <div class="step-circle">5</div>
+          <span class="step-name">歷史除錯</span>
+        </div>
+      </div>
+
+      <!-- 關卡 1：揭曉方塊 (Open the Box) -->
+      <div id="stageBox" class="challenge-stage active">
+        <div class="game-toolbar">
+          <div class="game-info">
+            <h3>🎁 關卡 1：揭曉方塊（共 8 題）</h3>
+            <p>翻開全部 8 個歷史秘寶方塊並答對，完成後自動前往時空迷宮！</p>
+          </div>
+          <div class="game-stats">
+            <span>已開啟：<strong id="boxesOpened">0</strong> / 8</span>
+          </div>
+        </div>
+
+        <div class="box-grid" id="boxGrid">
+          <!-- JS 動態生成 8 個方塊 -->
+        </div>
+
+        <!-- 揭曉方塊問答彈窗 -->
+        <div id="boxModal" class="game-modal">
+          <div class="modal-card">
+            <div class="modal-header">
+              <span class="modal-badge" id="modalBoxBadge">方塊 1</span>
+              <h3 id="modalBoxTitle">文物政策名稱</h3>
+            </div>
+            <div class="modal-body">
+              <div class="clue-box">
+                <span class="clue-icon" id="modalBoxIcon">📜</span>
+                <p id="modalBoxDesc">提示內容...</p>
+              </div>
+              <p class="question-prompt" id="modalBoxQuestion">問題題目...</p>
+              <div class="options-stack" id="modalBoxOptions"></div>
+              <div id="modalBoxFeedback" class="feedback-msg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 關卡 2：時空迷宮尋寶 (Maze Runner) -->
+      <div id="stageMaze" class="challenge-stage">
+        <div class="game-toolbar">
+          <div class="game-info">
+            <h3>🧭 關卡 2：時空迷宮大探險</h3>
+            <p>追蹤三位巡邏守護者，碰觸後自動開啟歷史考驗，解除封印並領取玉璽！</p>
+          </div>
+          <div class="game-stats">
+            <span>封印解鎖：<strong id="mazeGatesUnlocked">0</strong> / 3</span>
+          </div>
+        </div>
+
+        <div class="maze-adventure">
+          <div class="maze-main">
+            <div class="maze-scene" id="mazeScene" tabindex="0" aria-label="時空迷宮，使用方向鍵或 WASD 移動，碰觸守護者自動對話">
+              <canvas id="mazeCanvas" width="900" height="660" aria-label="迷宮場景"></canvas>
+              <div class="maze-scene-label"><span>時空遺址</span><small id="mazeRenderMode">立體場景載入中</small></div>
+              <div class="maze-compass">北 ↑</div>
+            </div>
+            <p id="mazeRenderNotice" class="maze-render-notice" role="status" hidden></p>
+            <div class="maze-command">
+              <p id="mazeMessage" role="status">循著雷達，尋找三位歷史守護者。</p>
+              <button id="mazeInteract" class="primary-btn" hidden disabled>領取玉璽</button>
+            </div>
+            <div class="maze-controls">
+              <p>方向鍵 / WASD 移動<br><small>碰觸守護者自動對話；抵達終點後領取玉璽</small></p>
+              <div class="virtual-dpad">
+                <button class="dpad-btn up" aria-label="向北移動" onclick="moveMazePlayer(0,-1)">▲</button>
+                <div class="dpad-mid"><button class="dpad-btn left" aria-label="向西移動" onclick="moveMazePlayer(-1,0)">◀</button><div class="dpad-center">●</div><button class="dpad-btn right" aria-label="向東移動" onclick="moveMazePlayer(1,0)">▶</button></div>
+                <button class="dpad-btn down" aria-label="向南移動" onclick="moveMazePlayer(0,1)">▼</button>
+              </div>
+            </div>
+          </div>
+          <aside class="maze-radar-panel" aria-label="目標雷達">
+            <div class="maze-radar-heading"><small>追蹤守護者</small><h4>時空雷達</h4><span>北 ↑</span></div>
+            <canvas id="mazeRadar" width="450" height="330" aria-label="玩家、守護者與玉璽即時位置"></canvas>
+            <p class="maze-radar-key">▲ 你的位置　◆ 玉璽<br>數字標記為尚未完成的守護者</p>
+            <ol class="maze-targets" id="mazeTargets">
+              <li data-guardian="2"><b>1</b><div>西周守門衛士<small>青銅鎧甲 · 封建制度</small><span>巡邏中</span></div></li>
+              <li data-guardian="3"><b>2</b><div>戰國竹簡賢士<small>長袍竹簡 · 布衣卿相</small><span>巡邏中</span></div></li>
+              <li data-guardian="4"><b>3</b><div>秦代持戟衛士<small>玄色甲衣 · 郡縣制度</small><span>巡邏中</span></div></li>
+            </ol>
+            <div class="maze-seal-status" id="mazeSealStatus">玉璽封印中 · 尚待三道考驗</div>
+          </aside>
+        </div>
+
+        <!-- 迷宮答題彈窗 -->
+        <div id="mazeModal" class="game-modal">
+          <div class="modal-card">
+            <div class="modal-header">
+              <span class="modal-badge" id="mazeGateBadge">第一道封印</span>
+              <h3 id="mazeGateTitle">守門考官</h3>
+            </div>
+            <div class="modal-body">
+              <p class="question-prompt" id="mazeQuestion">守門題目...</p>
+              <div class="options-stack" id="mazeOptions"></div>
+              <div id="mazeFeedback" class="feedback-msg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 關卡 3：天命仕途轉盤 (Spin the Wheel) -->
+      <div id="stageWheel" class="challenge-stage">
+        <div class="game-toolbar">
+          <div class="game-info">
+            <h3>🎡 關卡 3：天命仕途轉盤（答對題目自動消失，次數用完自動跳關）</h3>
+            <p>按下「啟動轉盤」抽取身分答題，轉盤次數用完後將自動進入殿試問答！</p>
+          </div>
+          <div class="game-stats">
+            <span>剩餘轉數：<strong id="spinsLeft">5</strong> 次</span>
+          </div>
+        </div>
+
+        <div class="wheel-stage">
+          <div class="wheel-container">
+            <div class="wheel-pointer">▼</div>
+            <canvas id="wheelCanvas" width="420" height="420"></canvas>
+            <button id="spinBtn" class="spin-action-btn" onclick="spinWheel()">啟動<br>轉盤</button>
+          </div>
+
+          <div class="wheel-result-card" id="wheelResultCard">
+            <div class="result-badge">當前身分指針</div>
+            <h3 id="wheelFateTitle">等待轉盤旋轉...</h3>
+            <p id="wheelFateDesc">按下中央的「啟動轉盤」，看看你在歷史長河中會轉到什麼身分！</p>
+            <button id="wheelAnswerBtn" class="primary-btn hide" onclick="openWheelQuestion()">開始接受身分考驗 ➔</button>
+          </div>
+        </div>
+
+        <!-- 轉盤彈窗 -->
+        <div id="wheelModal" class="game-modal">
+          <div class="modal-card">
+            <div class="modal-header">
+              <span class="modal-badge" id="wheelModalBadge">身分考驗</span>
+              <h3 id="wheelModalTitle">朝代命題</h3>
+            </div>
+            <div class="modal-body">
+              <p class="question-prompt" id="wheelQuestion">題目內容...</p>
+              <div class="options-stack" id="wheelOptions"></div>
+              <div id="wheelFeedback" class="feedback-msg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 關卡 4：殿試問答 (Quiz Show) -->
+      <div id="stageQuiz" class="challenge-stage">
+        <div class="game-toolbar">
+          <div class="game-info">
+            <h3>⚡ 關卡 4：殿試狀元爭霸戰（共 6 題）</h3>
+            <p>請從容審題作答，全數作答完畢後將自動前往最後一關「歷史除錯官」！</p>
+          </div>
+          <div class="game-stats">
+            <span>進度：<strong id="quizIndex">1</strong> / 6 題</span>
+            <span>連擊：<strong id="quizCombo">0</strong> 🔥</span>
+          </div>
+        </div>
+
+        <div class="quiz-arena">
+          <div class="lifelines-bar">
+            <button class="lifeline-btn" id="lifeline5050" onclick="useLifeline5050()">
+              <span class="btn-icon">✂️</span> 50:50 刪二錯
+            </button>
+            <button class="lifeline-btn" id="lifelineHint" onclick="useLifelineHint()">
+              <span class="btn-icon">💡</span> 夫子解經提示
+            </button>
+          </div>
+
+          <div class="quiz-question-card">
+            <div class="quiz-meta">
+              <span class="era-tag" id="quizEraTag">漢代未央宮</span>
+            </div>
+            <h2 class="quiz-title" id="quizTitle">題目載入中...</h2>
+            <div id="quizHintText" class="quiz-hint-box hide">提示內容</div>
+            <div class="quiz-options-grid" id="quizOptionsGrid"></div>
+            <div id="quizFeedbackBox" class="feedback-msg"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 關卡 5：歷史除錯官 (Spot Errors) -->
+      <div id="stageDetective" class="challenge-stage">
+        <div class="game-toolbar">
+          <div class="game-info">
+            <h3>🔍 關卡 5：歷史除錯官（最後一關）</h3>
+            <p>三則史料中有 1 則真相、2 則謊言。拖入對應區域，三張放好後立即揭曉答案！</p>
+          </div>
+          <div class="game-stats">
+            <span>已分類：<strong id="errorsFoundCount">0</strong> / 3 則史料</span>
+          </div>
+        </div>
+
+        <div class="detective-case-wrapper">
+          <div class="ancient-scroll">
+            <div class="scroll-header">
+              <div class="scroll-stamp">密奏檔案</div>
+              <h3>📜 奏疏檔案：歷代制度的三則傳聞</h3>
+            </div>
+            <div class="scroll-content" id="scrollContent">
+              <!-- JS 生成內容 -->
+            </div>
+          </div>
+          <div class="detective-log-card">
+            <h4>📋 案件偵破日誌</h4>
+            <p class="detective-instructions">拖曳卡片至真相或謊言區。也可先點選卡片，再點選分類區；全部放好前可移動更改。</p>
+            <div class="verdict-columns">
+              <section class="verdict-zone" data-verdict="true" tabindex="0" role="button" aria-label="放入真相區"><h5>真相</h5><p>符合歷史事實</p><div class="verdict-cards"></div></section>
+              <section class="verdict-zone" data-verdict="false" tabindex="0" role="button" aria-label="放入謊言區"><h5>謊言</h5><p>與歷史事實不符</p><div class="verdict-cards"></div></section>
+            </div>
+            <p id="detectiveStatus" role="status" aria-live="polite">請分類三張史料卡片。</p>
+          </div>
+        </div>
+        <div id="detectiveResults" class="detective-results" hidden></div>
+      </div>
+
+      <!-- 全作業 完成結算彈窗 -->
+      <div id="challengeCompleteModal" class="game-modal">
+        <div class="modal-card completion-card">
+          <div class="modal-header success-header">
+            <span class="modal-badge">🎉 全數通關</span>
+            <h3>商周至隋唐國家與社會 闖關結算</h3>
+          </div>
+          <div class="modal-body text-center">
+            <div class="completion-icon">🏆</div>
+            <h4>太棒了！你已順利闖過全部 5 道歷史關卡！</h4>
+            
+            <div class="result-summary-grid">
+              <div class="result-box">
+                <span class="res-num" id="finalTotalScore">0</span>
+                <span class="res-label">作業總得分</span>
+              </div>
+              <div class="result-box">
+                <span class="res-num" id="finalTotalTime">00:00</span>
+                <span class="res-label">總共花費時間</span>
+              </div>
+            </div>
+
+            <p class="result-evaluation" id="finalEvaluation">思維清晰敏捷，從古典封建、郡縣集權到歷代選才演進皆已融會貫通！</p>
+
+            <!-- 雲端試算表成績登錄狀態 -->
+            <div id="cloudSyncStatusBox" class="cloud-sync-status-box">
+              <span id="cloudSyncIcon" class="cloud-sync-icon">☁️</span>
+              <span id="cloudSyncText">正在將成績自動登錄至老師的試算表...</span>
+            </div>
+
+            <div class="modal-actions-row">
+              <button class="primary-btn gold-bg big-btn" onclick="goToUnit('tab-summary')">
+                🏆 查看榮譽學習證書 ➔
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 頁籤 2：學習成就與榮譽證書 ==================== -->
+    <section id="tab-summary" class="tab-pane">
+      <div class="summary-container">
+        <div class="cert-card" id="printableCertificate">
+          <div class="cert-border">
+            <div class="cert-stamp">文理狀元</div>
+            <div class="cert-header">
+              <h2>國中歷史二上・第一課</h2>
+              <h1>榮譽學習成就證書</h1>
+              <p class="cert-subtitle">商周至隋唐的國家與社會 複習作業闖關認證</p>
+            </div>
+            <div class="cert-body">
+              <p class="cert-text">
+                茲證明 <strong class="cert-highlight" id="certClass">201</strong>
+                學生 <strong class="cert-highlight" id="certName">歷史探險家</strong>
+                （座號：<strong id="certSeat">1</strong>），於本課複習作業中精研古典封建與郡縣集權，洞悉歷代選才演進之歷史因果，完成全部學科素養挑戰，表現卓越！
+              </p>
+
+              <div class="cert-stats-grid">
+                <div class="cert-stat-box">
+                  <span class="stat-num" id="certTotalScore">0</span>
+                  <span class="stat-label">作業總積分</span>
+                </div>
+                <div class="cert-stat-box">
+                  <span class="stat-num" id="certTotalStars">0</span>
+                  <span class="stat-label">摘取榮譽星星</span>
+                </div>
+                <div class="cert-stat-box">
+                  <span class="stat-num" id="certTotalTime">00:00</span>
+                  <span class="stat-label">作答總耗時</span>
+                </div>
+              </div>
+
+              <div class="badges-row" id="certBadgesRow">
+                <!-- 勳章由 JS 動態產生 -->
+              </div>
+
+              <div class="cert-footer">
+                <div class="cert-sign">
+                  <span>歷史科教學團隊 認證</span>
+                  <span class="cert-date" id="certDate">2026/09/20</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="certCloudSyncPill" class="cloud-sync-status-box" style="max-width: 600px; margin: 18px auto 0;">
+          <span id="certCloudSyncIcon" class="cloud-sync-icon">☁️</span>
+          <span id="certCloudSyncText">成績雲端登錄：準備中</span>
+        </div>
+
+        <div class="summary-actions">
+          <button class="primary-btn big-btn" onclick="printCertificate()">🖨️ 列印作業成果證書</button>
+          <button class="secondary-btn big-btn" onclick="shareScore()">📋 複製成績與時間報告（傳給老師）</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 學生報名與資料登記彈窗 (製作證書使用) -->
+    <div id="studentRegistrationModal" class="game-modal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <span class="modal-badge">📝 學籍登記</span>
+          <h3>建立學習檔案與成就證書資料</h3>
+        </div>
+        <div class="modal-body">
+          <!-- 學校帳號身分認證卡片 -->
+          <div class="school-auth-card">
+            <div class="auth-card-header">
+              <span class="auth-icon">🏫</span>
+              <div>
+                <strong class="auth-title">學生帳號雲端認證</strong>
+                <span class="auth-desc">（限定 @st.tc.edu.tw）</span>
+              </div>
+            </div>
+            <p class="auth-subtext">完成挑戰後，成績將自動登錄至老師的 Google 成績試算表！</p>
+            
+            <div id="googleSignInContainer" class="google-signin-wrapper">
+              <!-- Google 官方 Sign-In 按鈕將渲染在此 -->
+            </div>
+
+            <div id="authStatusBox" class="auth-status-box pending">
+              <span class="auth-status-icon">⚠️</span>
+              <span id="authStatusText">請點擊上方按鈕，以學校 Google 帳號完成認證</span>
+            </div>
+          </div>
+
+          <form id="studentRegistrationForm" onsubmit="handleRegistrationSubmit(event)">
+            <div class="form-row">
+              <label for="regClass">學生班級 <span class="req-star">*</span></label>
+              <select id="regClass" class="form-input" required>
+                <option value="" disabled selected>請選擇班級</option>
+                <option value="201">201</option>
+                <option value="202">202</option>
+                <option value="203">203</option>
+                <option value="204">204</option>
+                <option value="205">205</option>
+                <option value="206">206</option>
+                <option value="207">207</option>
+                <option value="208">208</option>
+                <option value="209">209</option>
+                <option value="210">210</option>
+                <option value="211">211</option>
+                <option value="212">212</option>
+                <option value="213">213</option>
+                <option value="214">214</option>
+                <option value="215">215</option>
+                <option value="216">216</option>
+                <option value="217">217</option>
+                <option value="218">218</option>
+                <option value="219">219</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label for="regSeat">學生座號 <span class="req-star">*</span></label>
+              <select id="regSeat" class="form-input" required>
+                <option value="" disabled selected>請選擇座號</option>
+                <option value="1">1號</option>
+                <option value="2">2號</option>
+                <option value="3">3號</option>
+                <option value="4">4號</option>
+                <option value="5">5號</option>
+                <option value="6">6號</option>
+                <option value="7">7號</option>
+                <option value="8">8號</option>
+                <option value="9">9號</option>
+                <option value="10">10號</option>
+                <option value="11">11號</option>
+                <option value="12">12號</option>
+                <option value="13">13號</option>
+                <option value="14">14號</option>
+                <option value="15">15號</option>
+                <option value="16">16號</option>
+                <option value="17">17號</option>
+                <option value="18">18號</option>
+                <option value="19">19號</option>
+                <option value="20">20號</option>
+                <option value="21">21號</option>
+                <option value="22">22號</option>
+                <option value="23">23號</option>
+                <option value="24">24號</option>
+                <option value="25">25號</option>
+                <option value="26">26號</option>
+                <option value="27">27號</option>
+                <option value="28">28號</option>
+                <option value="29">29號</option>
+                <option value="30">30號</option>
+                <option value="31">31號</option>
+                <option value="32">32號</option>
+                <option value="33">33號</option>
+                <option value="34">34號</option>
+                <option value="35">35號</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label for="regName">學生姓名 <span class="req-star">*</span></label>
+              <input type="text" id="regName" class="form-input" placeholder="例如：王小明" required>
+            </div>
+            <div class="modal-actions-row" style="margin-top: 24px;">
+              <button type="button" class="secondary-btn" onclick="closeModal('studentRegistrationModal')">返回閱讀講義</button>
+              <button type="submit" class="primary-btn gold-bg big-btn">🚀 確認送出並開始挑戰！</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 頁尾 -->
+  <footer class="app-footer">
+    <p>國中歷史二上 108 課綱數位互動學習網頁 ｜ 配合教材講義複習設計</p>
+  </footer>
+
+  <script src="app.js"></script>
+  <script src="detective.js"></script>
+  <script src="maze-scene.bundle.js"></script>
+  <script src="maze-adventure.js"></script>
+</body>
+</html>

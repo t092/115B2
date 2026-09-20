@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>國中歷史 數位互動學習殿堂 (CAI Hub) ｜ 108課綱歷史科作業平台</title>
+  <meta name="description" content="108課綱國中歷史數位互動作業學習平台，整合課本重點講義、3D時空迷宮、天命轉盤、殿試問答等多樣化關卡與雲端成績記錄。">
+  <!-- Google 字體引用 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!-- 獨立入口樣式表，絕不干擾子專案 -->
+  <link rel="stylesheet" href="hub.css">
+</head>
+<body>
+  <!-- 背景裝飾粒子微光層 -->
+  <div class="ambient-glow" aria-hidden="true"></div>
+
+  <div class="container">
+    <!-- 頂部頁頭 -->
+    <header class="hub-header">
+      <div class="brand-badge-wrapper">
+        <span class="badge-dot"></span>
+        <span>108 課綱 ｜ 國中歷史數位互動學習平台</span>
+      </div>
+      <h1 class="hub-title">國中歷史 數位互動學習殿堂</h1>
+      <p class="hub-subtitle">
+        結合課本重點精要、多道沉浸式闖關任務與個人學習歷程。選擇學習單元，啟動你的歷史探險！
+      </p>
+
+      <!-- 核心技術特色標籤條 -->
+      <div class="features-strip">
+        <div class="feature-tag">
+          <span>🏰</span>
+          <span><strong>章節獨立架構</strong> 各單元獨立運作</span>
+        </div>
+        <div class="feature-tag">
+          <span>🛡️</span>
+          <span><strong>安全身分驗證</strong> 支援學校 Google 帳號</span>
+        </div>
+        <div class="feature-tag">
+          <span>📊</span>
+          <span><strong>雲端成績試算</strong> 即時登錄學習成果</span>
+        </div>
+        <div class="feature-tag">
+          <span>🎮</span>
+          <span><strong>3D 遊戲化關卡</strong> 激發學生自主學習</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 篩選與即時搜尋工具列 -->
+    <nav class="hub-toolbar" aria-label="課程單元導航與篩選">
+      <div class="filter-buttons" role="tablist">
+        <button class="filter-btn active" data-filter="all" onclick="filterCards('all', this)">全部章節 (5)</button>
+        <button class="filter-btn" data-filter="active" onclick="filterCards('active', this)">已開放挑戰 (1)</button>
+        <button class="filter-btn" data-filter="upcoming" onclick="filterCards('upcoming', this)">籌備製作中 (4)</button>
+      </div>
+      <div class="search-wrapper">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input 
+          type="text" 
+          id="courseSearchInput" 
+          class="search-input" 
+          placeholder="搜尋課名、時代或關鍵字..." 
+          oninput="handleSearch(this.value)"
+          aria-label="搜尋課名或關鍵字"
+        >
+      </div>
+    </nav>
+
+    <!-- 主卡片網格清單 -->
+    <main class="cards-grid" id="cardsGrid">
+      
+      <!-- 卡片 1：現有 G2B3 專案（已正式上線） -->
+      <article class="cai-card active" data-status="active" data-keywords="商周 隋唐 封建 井田 宗法 科舉 九品官人 迷宮 轉盤 除錯 講義 歷史二上 第1課">
+        <div class="card-header">
+          <span class="chapter-number">二上 第 1 課</span>
+          <span class="status-badge badge-ready">
+            <span>●</span> 正式開放挑戰
+          </span>
+        </div>
+        <h2 class="card-title">商周至隋唐的國家與社會</h2>
+        <p class="card-desc">
+          包含課本教學重點講義即時閱讀與支援列印，並具備 5 大連貫冒險關卡：揭曉方塊、3D時空迷宮探險、天命轉盤、殿試問答與歷史除錯。已綁定 Google 試算表自動成績登錄系統。
+        </p>
+        <div class="card-pills">
+          <span class="pill-item">📜 講義閱讀列印</span>
+          <span class="pill-item">🧭 3D時空迷宮</span>
+          <span class="pill-item">🎯 5道冒險關卡</span>
+          <span class="pill-item">🏆 榮譽勳章與證書</span>
+          <span class="pill-item">☁️ 雲端成績連線</span>
+        </div>
+        <div class="card-footer">
+          <a href="./G2B3/index.html" class="action-btn btn-enter" id="btnEnterG2B3">
+            <span>🚀 立即進入挑戰作業</span>
+            <span>➔</span>
+          </a>
+        </div>
+      </article>
+
+      <!-- 卡片 2：第 2 課（籌備中） -->
+      <article class="cai-card upcoming" data-status="upcoming" data-keywords="秦漢 統一 大一統 秦始皇 漢武帝 絲路 儒家 郡縣 官僚 歷史二上 第2課">
+        <div class="card-header">
+          <span class="chapter-number">二上 第 2 課</span>
+          <span class="status-badge badge-lock">
+            <span>🔒</span> 籌備製作中
+          </span>
+        </div>
+        <h2 class="card-title">秦漢統一帝國與文化發展</h2>
+        <p class="card-desc">
+          重現大一統帝國的奠基過程、郡縣制與中央集權體系之演變，並探索張騫通西域、絲綢之路貿易交流與漢代經學、科技藝術之繁榮。
+        </p>
+        <div class="card-pills">
+          <span class="pill-item">🏛️ 中央集權制度</span>
+          <span class="pill-item">🐫 絲綢之路開闢</span>
+          <span class="pill-item">📜 漢代學術科技</span>
+          <span class="pill-item">⚔️ 秦始皇與漢武帝</span>
+        </div>
+        <div class="card-footer">
+          <button class="action-btn btn-disabled" disabled>
+            <span>🔒 專案籌備製作中</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- 卡片 3：第 3 課（籌備中） -->
+      <article class="cai-card upcoming" data-status="upcoming" data-keywords="魏晉 南北朝 九品官人 世族 門閥 民族融合 北魏 孝文帝 歷史二上 第3課">
+        <div class="card-header">
+          <span class="chapter-number">二上 第 3 課</span>
+          <span class="status-badge badge-lock">
+            <span>🔒</span> 籌備製作中
+          </span>
+        </div>
+        <h2 class="card-title">魏晉南北朝的分裂與民族融合</h2>
+        <p class="card-desc">
+          剖析三國鼎立至南北朝的政局更迭、九品官人法如何促成世族門閥階級，以及北方胡漢民族大融合與南方的經濟開發。
+        </p>
+        <div class="card-pills">
+          <span class="pill-item">👑 九品官人法</span>
+          <span class="pill-item">🏯 世族門閥政治</span>
+          <span class="pill-item">🤝 北魏孝文帝漢化</span>
+          <span class="pill-item">🌾 江南經濟開發</span>
+        </div>
+        <div class="card-footer">
+          <button class="action-btn btn-disabled" disabled>
+            <span>🔒 專案籌備製作中</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- 卡片 4：第 4 課（籌備中） -->
+      <article class="cai-card upcoming" data-status="upcoming" data-keywords="隋唐 盛世 科舉 三省六部 大運河 長安 東亞文化圈 日本遣唐使 歷史二上 第4課">
+        <div class="card-header">
+          <span class="chapter-number">二上 第 4 課</span>
+          <span class="status-badge badge-lock">
+            <span>🔒</span> 籌備製作中
+          </span>
+        </div>
+        <h2 class="card-title">隋唐帝國的盛世與東亞文化圈</h2>
+        <p class="card-desc">
+          探索隋朝大運河、唐代三省六部與科舉選才機制，領略國際大都會長安的胡風與萬國來朝，以及東亞文化圈的形成歷程。
+        </p>
+        <div class="card-pills">
+          <span class="pill-item">🌊 隋朝大運河</span>
+          <span class="pill-item">⚖️ 三省六部制度</span>
+          <span class="pill-item">🏮 國際長安大都會</span>
+          <span class="pill-item">🌏 東亞文化圈</span>
+        </div>
+        <div class="card-footer">
+          <button class="action-btn btn-disabled" disabled>
+            <span>🔒 專案籌備製作中</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- 卡片 5：第 5 課（籌備中） -->
+      <article class="cai-card upcoming" data-status="upcoming" data-keywords="宋元 變遷 文治 商業 活字印刷 蒙古 西征 清明上河圖 歷史二上 第5課">
+        <div class="card-header">
+          <span class="chapter-number">二上 第 5 課</span>
+          <span class="status-badge badge-lock">
+            <span>🔒</span> 籌備製作中
+          </span>
+        </div>
+        <h2 class="card-title">宋元時期的政局變遷與社會經濟</h2>
+        <p class="card-desc">
+          解析宋代崇文抑武的文治體系、市民社會與繁榮的商業市坊，並見證蒙古西征擴展歐亞交通網與宋元四大發明的西傳。
+        </p>
+        <div class="card-pills">
+          <span class="pill-item">📖 宋朝重文輕武</span>
+          <span class="pill-item">🪙 坊市開放與交子</span>
+          <span class="pill-item">🐎 蒙古帝國擴張</span>
+          <span class="pill-item">🧭 四大發明西傳</span>
+        </div>
+        <div class="card-footer">
+          <button class="action-btn btn-disabled" disabled>
+            <span>🔒 專案籌備製作中</span>
+          </button>
+        </div>
+      </article>
+
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="hub-footer">
+      <p>© 國中歷史數位互動作業教學平台 ｜ 依據教育部 108 課綱歷史科綱要設計</p>
+      <div class="footer-info">
+        <span>平台架構：純靜態極速載入 ✕ 子專案完全解耦隔離</span>
+        <span>•</span>
+        <a href="./G2B3/index.html" class="footer-link">進入第 1 課（商周至隋唐）</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 純前端互動腳本：提供分類篩選與即時搜尋，無任何外部依賴或跨專案干擾 -->
+  <script>
+    let currentFilter = 'all';
+    let currentSearch = '';
+
+    function filterCards(status, btnElement) {
+      currentFilter = status;
+      
+      // 切換按鈕 active 樣式
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnElement) {
+        btnElement.classList.add('active');
+      }
+
+      applyFilters();
+    }
+
+    function handleSearch(keyword) {
+      currentSearch = keyword.trim().toLowerCase();
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const cards = document.querySelectorAll('.cai-card');
+      
+      cards.forEach(card => {
+        const cardStatus = card.getAttribute('data-status');
+        const cardKeywords = (card.getAttribute('data-keywords') || '').toLowerCase();
+        const cardTitle = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+        const cardDesc = card.querySelector('.card-desc')?.textContent.toLowerCase() || '';
+
+        // 檢查狀態篩選
+        const matchStatus = (currentFilter === 'all') || (cardStatus === currentFilter);
+
+        // 檢查搜尋關鍵字
+        const matchSearch = !currentSearch || 
+          cardKeywords.includes(currentSearch) || 
+          cardTitle.includes(currentSearch) || 
+          cardDesc.includes(currentSearch);
+
+        if (matchStatus && matchSearch) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
