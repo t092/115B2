@@ -6,7 +6,7 @@
 const CAI_CONFIG = {
   CLIENT_ID: '403500919614-4c109l85fn6hul7nng2nskbs9kn4reis.apps.googleusercontent.com',
   GAS_API_URL: 'https://script.google.com/macros/s/AKfycbzjetB7qPpquboR0rnMyvWNOQxAi3AbzSPNiVsiEiEnrxvckNH3X1_z4AzSctdJVFbIQQ/exec',
-  SCORE_FORM_URL: '',
+  SCORE_FORM_URL: 'https://docs.google.com/forms/d/e/1FAIpQLSe0zZJA3NnwwEWIXOtcmqK1FPD88ScvnIGRrfVVY-SWnebdmg/viewform?usp=header',
   SCORE_FORM_ENTRIES: {
     className: '', seat: '', name: '', score: '', time: '', badges: ''
   },
