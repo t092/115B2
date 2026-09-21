@@ -572,7 +572,7 @@
             <!-- 雲端試算表成績登錄狀態 -->
             <div id="cloudSyncStatusBox" class="cloud-sync-status-box">
               <span id="cloudSyncIcon" class="cloud-sync-icon">☁️</span>
-              <span id="cloudSyncText">正在將成績自動登錄至老師的試算表...</span>
+              <span id="cloudSyncText" role="status" aria-live="polite">正在確認成績登錄結果...</span>
             </div>
 
             <div class="modal-actions-row">
@@ -634,7 +634,11 @@
 
         <div id="certCloudSyncPill" class="cloud-sync-status-box" style="max-width: 600px; margin: 18px auto 0;">
           <span id="certCloudSyncIcon" class="cloud-sync-icon">☁️</span>
-          <span id="certCloudSyncText">成績雲端登錄：準備中</span>
+          <span id="certCloudSyncText" role="status" aria-live="polite">成績雲端登錄：準備中</span>
+        </div>
+        <div style="text-align: center; margin: 12px;">
+          <button type="button" onclick="startFullChallenge()">重新登入學校帳號</button>
+          <button type="button" onclick="uploadScoreToGAS()">重試上傳</button>
         </div>
 
         <div class="summary-actions">

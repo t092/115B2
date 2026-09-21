@@ -1,0 +1,14 @@
+{
+  "name": "history-cai-hub",
+  "private": true,
+  "scripts": {
+    "build:maze": "node G2B3/tools/build-maze.cjs",
+    "build:auth": "node G2B3/tools/build-auth.cjs",
+    "test": "node --test G2B3/tests/score-check.cjs",
+    "test:browser": "node G2B3/tests/score-browser.cjs && node G2B3/tests/detective-check.cjs && node G2B3/tests/maze-check.cjs"
+  },
+  "devDependencies": {
+    "node-forge": "1.4.0",
+    "playwright": "1.62.1"
+  }
+}

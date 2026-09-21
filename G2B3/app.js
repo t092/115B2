@@ -114,7 +114,8 @@ const gameState = {
     seat: '1',
     name: '歷史探險家',
     email: '',
-    authenticated: false
+    authenticated: false,
+    idToken: ''
   },
   // 全程挑戰計時系統
   challenge: {
@@ -286,6 +287,9 @@ function parseJwt(token) {
 }
 
 function handleGoogleAuthCallback(response) {
+  gameState.student.authenticated = false;
+  gameState.student.idToken = '';
+  gameState.student.email = '';
   const payload = parseJwt(response.credential);
   if (!payload || !payload.email) {
     alert('身分認證失敗：無法取得 Google 帳號資料，請再試一次。');
@@ -310,11 +314,12 @@ function handleGoogleAuthCallback(response) {
   gameState.student.email = email;
   gameState.student.name = payload.name || payload.given_name || '學生';
   gameState.student.authenticated = true;
+  gameState.student.idToken = response.credential;
 
   const box = document.getElementById('authStatusBox');
   if (box) {
     box.className = 'auth-status-box success';
-    box.innerHTML = `<span class="auth-status-icon">✅</span> <span>已通過認證：<strong>${email}</strong></span>`;
+    box.textContent = `✅ 已登入：${email}`;
   }
 
   // 自動帶入學生姓名
@@ -323,7 +328,10 @@ function handleGoogleAuthCallback(response) {
   document.getElementById('studentName').value = gameState.student.name;
 }
 
-function uploadScoreToGAS() {
+let scoreUploadInFlight = false;
+let scoreSubmissionId = '';
+async function uploadScoreToGAS() {
+  if (scoreUploadInFlight) return;
   const syncBox = document.getElementById('cloudSyncStatusBox');
   const syncText = document.getElementById('cloudSyncText');
   const syncIcon = document.getElementById('cloudSyncIcon');
@@ -344,11 +352,19 @@ function uploadScoreToGAS() {
     }
   }
 
-  updateStatus('uploading', '⏳', `正在將成績登錄至試算表 [${SCHOOL_AUTH_CONFIG.UNIT_NAME}] 頁籤...`);
+  if (!gameState.challenge.completed) return;
+  const token = parseJwt(gameState.student.idToken || '');
+  if (!gameState.student.authenticated || !token || !Number.isFinite(token.exp) || token.exp * 1000 <= Date.now()) {
+    updateStatus('error', '⚠️', '成績尚未上傳：請先重新登入學校 Google 帳號，再按「重試上傳」。');
+    return;
+  }
+  if (!scoreSubmissionId) scoreSubmissionId = crypto.randomUUID();
+  updateStatus('uploading', '⏳', '正在確認成績登錄結果，請稍候...');
 
   const payload = {
     unitName: SCHOOL_AUTH_CONFIG.UNIT_NAME,
-    email: gameState.student.email || (gameState.student.name + '@st.tc.edu.tw'),
+    idToken: gameState.student.idToken,
+    submissionId: scoreSubmissionId,
     class: gameState.student.class,
     seat: gameState.student.seat,
     name: gameState.student.name,
@@ -359,23 +375,35 @@ function uploadScoreToGAS() {
     dateStr: new Date().toLocaleDateString('zh-TW')
   };
 
-  fetch(SCHOOL_AUTH_CONFIG.GAS_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {
-      'Content-Type': 'text/plain;charset=utf-8'
-    },
-    body: JSON.stringify(payload)
-  }).then(() => {
+  scoreUploadInFlight = true;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  try {
+    const response = await fetch(SCHOOL_AUTH_CONFIG.GAS_URL, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (!response.ok || !result || result.status !== 'success' || result.submissionId !== scoreSubmissionId) {
+      throw new Error((result && result.message) || '未收到有效的登錄確認');
+    }
     updateStatus('success', '☁️', `成績已成功登錄至試算表 [${SCHOOL_AUTH_CONFIG.UNIT_NAME}] 頁籤！`);
-  }).catch((err) => {
-    console.warn('成績上傳提示：', err);
-    updateStatus('success', '☁️', `成績已送出至老師的試算表！`);
-  });
+  } catch (err) {
+    updateStatus('error', '⚠️', `無法確認成績是否已登錄：${err.name === 'AbortError' ? '連線逾時' : err.message}。請重試上傳；同一份作業不會重複登錄。`);
+  } finally {
+    clearTimeout(timeout);
+    scoreUploadInFlight = false;
+  }
 }
 
 function startFullChallenge() {
   sounds.click();
+  document.querySelector('#studentRegistrationModal button[type="submit"]').textContent =
+    gameState.challenge.completed ? '確認資料並重試上傳' : '🚀 確認送出並開始挑戰！';
   // 彈出學籍資料登記視窗 (班級、座號、姓名，製作證書使用)
   const regClass = document.getElementById('regClass');
   const regSeat = document.getElementById('regSeat');
@@ -434,7 +462,7 @@ function handleRegistrationSubmit(e) {
   // 檢查在正式網頁環境（https://t092.github.io 或 http 伺服器）下是否已完成學校認證
   const isWebProtocol = window.location.protocol.startsWith('http');
   if (isWebProtocol && !gameState.student.authenticated) {
-    const confirmProceed = confirm('⚠️ 提醒：您尚未以學校 Google 帳號完成認證！\n若未完成認證，成績可能無法自動寫入老師的試算表。\n\n您是否要繼續以未認證身分開始挑戰？');
+    const confirmProceed = confirm('您尚未登入學校 Google 帳號。\n可以先練習並取得證書；完成登入後才能上傳成績。\n\n是否繼續練習？');
     if (!confirmProceed) return;
   }
 
@@ -448,6 +476,12 @@ function handleRegistrationSubmit(e) {
 
   updateCertificate();
   closeModal('studentRegistrationModal');
+
+  if (gameState.challenge.completed) {
+    goToUnit('tab-summary');
+    uploadScoreToGAS();
+    return;
+  }
 
   sounds.fanfare();
   goToUnit('tab-challenge');

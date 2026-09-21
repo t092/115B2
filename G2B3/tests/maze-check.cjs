@@ -1,6 +1,4 @@
-let playwright;
-try { playwright=require(process.env.PLAYWRIGHT_MODULE || 'playwright'); }
-catch { playwright=require('C:/Users/grifonxu/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'); }
+const playwright = require('./playwright.cjs');
 const {chromium}=playwright;
 const assert=require('node:assert/strict');
 const http=require('node:http');
@@ -8,6 +6,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const {pathToFileURL}=require('node:url');
 const root=path.resolve(__dirname,'..');
+const output=path.resolve(root,'../test-results');fs.mkdirSync(output,{recursive:true});
 const server=http.createServer((req,res)=>{
   const file=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname==='/'?'/index.html':new URL(req.url,'http://localhost').pathname));
   if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}
@@ -32,7 +31,7 @@ const server=http.createServer((req,res)=>{
     await p.waitForTimeout(250);
   };
   await page.goto(url,{waitUntil:'domcontentloaded'});await start(page);
-  await page.locator('#stageMaze').screenshot({path:path.join(__dirname,'maze-desktop.png')});
+  await page.locator('#stageMaze').screenshot({path:path.join(output,'maze-desktop.png')});
   assert.equal(await page.locator('#mazeScene canvas').count(),2);
   assert.equal(await page.locator('#mazeInteract').isVisible(),false);
   // No dialogue button or spacebar: movement alone must open the first question.
@@ -69,7 +68,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.evaluate(()=>gameState.score),60);
   await page.setViewportSize({width:390,height:844});await page.waitForTimeout(250);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-  await page.locator('#stageMaze').screenshot({path:path.join(__dirname,'maze-mobile.png')});
+  await page.locator('#stageMaze').screenshot({path:path.join(output,'maze-mobile.png')});
   await page.evaluate(()=>{playerPos={x:13,y:9};MazeAdventure.refresh();});
   await page.locator('#mazeInteract').click();
   await page.evaluate(()=>document.getElementById('mazeInteract').click());
@@ -79,7 +78,7 @@ const server=http.createServer((req,res)=>{
 
   const local=await context.newPage(),localErrors=[];local.on('pageerror',e=>localErrors.push(e.message));
   await local.goto(pathToFileURL(path.join(root,'index.html')).href,{waitUntil:'domcontentloaded'});await start(local);
-  await local.locator('#stageMaze').screenshot({path:path.join(__dirname,'maze-local-file.png')});
+  await local.locator('#stageMaze').screenshot({path:path.join(output,'maze-local-file.png')});
   assert.equal(await local.locator('#mazeRenderNotice').isVisible(),false);
   // Let the first guardian approach the stationary player: patrol contact also triggers automatically.
   await local.waitForFunction(()=>document.getElementById('mazeModal').classList.contains('show'),{},{timeout:15000});

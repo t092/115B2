@@ -37,17 +37,19 @@ function doPost(e) {
       data = e.parameter || {};
     }
 
-    // 1. 安全檢驗：限定 @st.tc.edu.tw 網域
-    var email = (data.email || '').trim().toLowerCase();
-    if (!email.endsWith('@st.tc.edu.tw')) {
-      return ContentService.createTextOutput(JSON.stringify({
-        status: 'error',
-        message: '身分驗證失敗：僅限 @st.tc.edu.tw 學校學生帳號'
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
+    var identity = verifyStudentToken(data.idToken);
+    var email = identity.email.trim().toLowerCase();
+    if (data.unitName !== AUTH_CONFIG.unit) throw new Error('不支援的教學單元');
+    if (!/^[a-f0-9-]{36}$/i.test(data.submissionId || '')) throw new Error('缺少有效的作業識別碼');
+    if (!Number.isSafeInteger(data.score) || data.score < 0 || data.score > 1000 ||
+        !Number.isSafeInteger(data.stars) || data.stars < 0 || data.stars > 100) throw new Error('成績格式或範圍不正確');
+    if (!String(data.class || '').trim() || !String(data.name || '').trim() ||
+        !/^\d{1,3}$/.test(String(data.seat || ''))) throw new Error('請完整填寫班級、座號與姓名');
+    var safeFields = [data.class, data.seat, data.name, data.timeSpent,
+      Array.isArray(data.badges) ? data.badges.join('、') : data.badges].map(sheetText);
 
     var spreadsheet = getSpreadsheet();
-    var unitName = (data.unitName || '第1課_商周至隋唐的國家與社會').trim();
+    var unitName = AUTH_CONFIG.unit;
     var sheet = spreadsheet.getSheetByName(unitName);
 
     // 2. 判斷該單元分頁是否存在，若無則全自動新建並格式化表頭
@@ -63,7 +65,7 @@ function doPost(e) {
         '榮譽星星數',
         '作答總耗時',
         '解鎖勳章',
-        '挑戰日期'
+        '挑戰日期', '作業識別碼'
       ];
       sheet.appendRow(headers);
       var headerRange = sheet.getRange(1, 1, 1, headers.length);
@@ -74,6 +76,15 @@ function doPost(e) {
       sheet.setFrozenRows(1);
     }
 
+    // Add the receipt column to existing ten-column sheets; preserve earlier rows.
+    if (!sheet.getRange(1, 11).getValue()) sheet.getRange(1, 11).setValue('作業識別碼');
+    if (sheet.getRange(1, 11).getValue() !== '作業識別碼') throw new Error('試算表第 11 欄已被使用，請先確認欄位設定');
+    var receipt = identity.sub + ':' + data.submissionId;
+    if (sheet.getLastRow() > 1 && sheet.getRange(2, 11, sheet.getLastRow() - 1, 1)
+        .createTextFinder(receipt).matchEntireCell(true).findNext()) {
+      return ContentService.createTextOutput(JSON.stringify({status: 'success', unit: unitName,
+        submissionId: data.submissionId})).setMimeType(ContentService.MimeType.JSON);
+    }
     // 3. 追加學生成績紀錄
     var now = new Date();
     var formattedDate = Utilities.formatDate(now, 'Asia/Taipei', 'yyyy/MM/dd HH:mm:ss');
@@ -81,18 +92,16 @@ function doPost(e) {
     sheet.appendRow([
       formattedDate,
       email,
-      data.class || '',
-      data.seat || '',
-      data.name || '',
+      safeFields[0], safeFields[1], safeFields[2],
       Number(data.score) || 0,
       Number(data.stars) || 0,
-      data.timeSpent || '',
-      Array.isArray(data.badges) ? data.badges.join('、') : (data.badges || ''),
-      data.dateStr || Utilities.formatDate(now, 'Asia/Taipei', 'yyyy/MM/dd')
+      safeFields[3], safeFields[4],
+      Utilities.formatDate(now, 'Asia/Taipei', 'yyyy/MM/dd'), receipt
     ]);
 
     return ContentService.createTextOutput(JSON.stringify({
       status: 'success',
+      submissionId: data.submissionId,
       unit: unitName,
       message: '成績已成功登錄至單元：' + unitName
     })).setMimeType(ContentService.MimeType.JSON);
@@ -110,7 +119,6 @@ function doPost(e) {
 function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify({
     status: 'online',
-    spreadsheetId: SPREADSHEET_ID,
     message: '國中歷史數位互動作業 - 萬能多單元成績接收 API 正常運行中！'
   })).setMimeType(ContentService.MimeType.JSON);
 }
@@ -256,4 +264,3 @@ function test() {
   var result = doPost(fakeEvent);
   Logger.log('執行結果: ' + result.getContent());
 }
-
