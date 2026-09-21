@@ -31,7 +31,6 @@ function setupScoreForms() {
     var form = FormApp.create(config.title);
     form.setDescription(config.description);
     form.setCollectEmail(true);
-    form.setRequireLogin(true);
     form.setLimitOneResponsePerUser(false);
     form.setConfirmationMessage('資料已送出，老師會依通關證書截圖核對成績。');
 

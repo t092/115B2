@@ -17,7 +17,7 @@
 - `G2B3`：第一課成績與通關證書
 - `DynaSoKOBAN`：朝代 SOKOBAN 成績與通關證書
 
-學生必須登入 Google Form，表單會收集已驗證的 Google Email，並要求上傳通關證書截圖。由於 Apps Script 的 `FormApp` 目前不能程式化新增檔案上傳題型，檔案上傳題需手動新增。
+學生必須登入 Google Form，表單會收集已驗證的 Google Email，並要求上傳通關證書截圖。程式不使用已 deprecated 的 `setRequireLogin()`；由 Google Form 的 Email 收集與檔案上傳設定負責要求登入。由於 Apps Script 的 `FormApp` 目前不能程式化新增檔案上傳題型，檔案上傳題需手動新增。
 
 ## 填入前端設定
 
