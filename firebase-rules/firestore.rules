@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /students/{email} {
+      allow get: if request.auth != null;
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /scores/{scoreId} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.unitName in [
+          'G2B3',
+          'DynaSoKOBAN'
+        ]
+        && request.resource.data.status == 'pending_review'
+        && request.resource.data.totalScore is int
+        && request.resource.data.totalScore >= 0
+        && request.resource.data.totalScore <= 1000
+        && request.resource.data['class'] is string
+        && request.resource.data['seat'] is string
+        && request.resource.data.name is string
+        && get(/databases/$(database)/documents/students/$(request.resource.data.email)).data['class'] == request.resource.data['class']
+        && get(/databases/$(database)/documents/students/$(request.resource.data.email)).data['seat'] == request.resource.data['seat'];
+
+      // 成績包含個資，第一階段不直接開放查詢排行榜。
+      // 排行榜應改由教師核對後的安全彙總資料提供。
+      allow read: if false;
+
+      allow update, delete: if false;
+    }
+
+    match /users/{uid} {
+      allow read, create, update: if request.auth != null && request.auth.uid == uid;
+      allow delete: if false;
+    }
+  }
+}

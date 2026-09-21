@@ -1,42 +1,23 @@
 /**
  * 中國朝代 SOKOBAN - CAI 電腦輔助教學系統服務模組
- * 負責：st.tc.edu.tw 學生登入認證、免登入體驗管理、GAS 成績上傳與班級排行榜
+ * 負責：學生資料工作階段、免登入體驗管理、Firebase 成績上傳與班級排行榜
  */
 
 const CAI_CONFIG = {
-  CLIENT_ID: '403500919614-4c109l85fn6hul7nng2nskbs9kn4reis.apps.googleusercontent.com',
-  GAS_API_URL: 'https://script.google.com/macros/s/AKfycbzjetB7qPpquboR0rnMyvWNOQxAi3AbzSPNiVsiEiEnrxvckNH3X1_z4AzSctdJVFbIQQ/exec',
-  SCORE_FORM_URL: 'https://docs.google.com/forms/d/e/1FAIpQLSfpEN7ExwsG1kTcaNZDTf2KIFec2tpx7FqqxSSKydm0zzI2tQ/viewform?usp=header',
-  SCORE_FORM_ENTRIES: {
-    className: '', seat: '', name: '', score: ''
-  },
-  HOSTED_DOMAIN: 'st.tc.edu.tw',
   UNIT_NAME: 'DynaSoKOBAN',
   SESSION_KEY: 'L2B1A_DYNA_STUDENT_V2' // 使用 sessionStorage，關閉瀏覽器即清空防呆
 };
 
 const CAI = {
   openScoreForm(scoreData) {
-    if (!CAI_CONFIG.SCORE_FORM_URL) {
-      alert('成績登錄表尚未設定，請稍後再試或通知老師。');
-      return;
-    }
-    const values = {
-      className: scoreData.className || '',
-      seat: scoreData.seat || '',
-      name: scoreData.name || '',
-      score: String(scoreData.score ?? '')
-    };
-    const params = new URLSearchParams();
-    Object.keys(values).forEach(key => {
-      const entry = CAI_CONFIG.SCORE_FORM_ENTRIES[key];
-      if (entry && values[key]) params.set(`entry.${entry}`, values[key]);
+    return this.submitScore({
+      totalScore: scoreData.score,
+      moves: scoreData.moves || 0,
+      durationSeconds: scoreData.durationSeconds || 0,
+      maxLevel: scoreData.maxLevel || 5,
+      isCompleted: true,
+      levelDetails: scoreData.levelDetails || []
     });
-    const separator = CAI_CONFIG.SCORE_FORM_URL.includes('?') ? '&' : '?';
-    const url = params.toString()
-      ? CAI_CONFIG.SCORE_FORM_URL + separator + params.toString()
-      : CAI_CONFIG.SCORE_FORM_URL;
-    window.open(url, '_blank', 'noopener');
   },
 
   /**
@@ -66,7 +47,7 @@ const CAI = {
    */
   isLoggedIn() {
     const s = this.getStudent();
-    return s && s.email && !s.isGuest;
+    return Boolean(s && !s.isGuest && s.classId && s.seatNo && s.name);
   },
 
   /**
@@ -91,13 +72,25 @@ const CAI = {
     sessionStorage.setItem(CAI_CONFIG.SESSION_KEY, JSON.stringify({
       isGuest: false,
       email: studentData.email || '',
-      idToken: studentData.idToken || '',
+      idToken: '',
       name: studentData.name || '',
       classId: studentData.classId || '',
       seatNo: studentData.seatNo || '',
+      registered: studentData.registered === true,
+      rosterName: studentData.rosterName || '',
       isTeacher: studentData.isTeacher || false,
       loginTime: new Date().toISOString()
     }));
+    if (window.FirebaseService) {
+      FirebaseService.setStudentProfile({
+        classId: studentData.classId,
+        seatNo: studentData.seatNo,
+        name: studentData.name,
+        email: studentData.email,
+        registered: studentData.registered === true,
+        rosterName: studentData.rosterName
+      });
+    }
   },
 
   /**
@@ -105,9 +98,6 @@ const CAI = {
    */
   logout() {
     sessionStorage.removeItem(CAI_CONFIG.SESSION_KEY);
-    if (window.google && google.accounts && google.accounts.id) {
-      google.accounts.id.disableAutoSelect();
-    }
   },
 
   /**
@@ -128,8 +118,8 @@ const CAI = {
   },
 
   /**
-   * 提交成績至 Google 試算表 (GAS)
-   * 備註：體驗模式不發送任何請求
+   * 提交成績至 Firebase。
+   * 備註：純訪客體驗模式不發送任何請求。
    */
   async submitScore(scoreData) {
     if (this.isGuest()) {
@@ -140,72 +130,40 @@ const CAI = {
     }
 
     const student = this.getStudent();
-    if (!student || !student.email) {
+    if (!student) {
       return {
-        status: 'not_logged_in',
-        message: '未登入學生資訊'
+        status: 'not_ready',
+        message: '尚未填寫學生資料'
       };
     }
 
-    const claims = this.decodeJwt(student.idToken || '');
-    if (!claims || !Number.isFinite(claims.exp) || claims.exp * 1000 <= Date.now()) {
-      return {status: 'error', message: '登入已過期，請回首頁重新登入學校帳號'};
-    }
-    const payload = {
-      unitName: CAI_CONFIG.UNIT_NAME,
-      idToken: student.idToken,
-      action: 'submitScore',
-      name: student.name,
-      classId: student.classId,
-      seatNo: student.seatNo,
-      totalScore: scoreData.totalScore || 0,
-      moves: scoreData.moves || 0,
-      durationSeconds: scoreData.durationSeconds || 0,
-      maxLevel: scoreData.maxLevel || 1,
-      isCompleted: scoreData.isCompleted || false,
-      levelDetails: scoreData.levelDetails || []
-    };
-
-    try {
-      // 使用 text/plain 避免觸發 CORS 預檢限制
-      const res = await fetch(CAI_CONFIG.GAS_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
+    if (window.FirebaseService && FirebaseService.isConfigured()) {
+      return FirebaseService.submitScore({
+        unitId: CAI_CONFIG.UNIT_NAME,
+        profile: {
+          classId: student.classId,
+          seatNo: student.seatNo,
+          name: student.name
+        },
+        score: scoreData.totalScore,
+        moves: scoreData.moves,
+        durationSeconds: scoreData.durationSeconds,
+        levelDetails: scoreData.levelDetails,
+        completed: scoreData.isCompleted,
+        isGuest: false
       });
-      const result = await res.json();
-      if (!res.ok || !result || result.status !== 'success') {
-        console.warn('GAS 回傳成績寫入失敗:', result);
-        return {
-          status: 'error',
-          message: (result && result.message) || `HTTP ${res.status}`
-        };
-      }
-      return result;
-    } catch (err) {
-      console.warn('成績上傳失敗或離線:', err.message || err);
-      return {
-        status: 'network_error',
-        message: '無法連線至成績伺服器'
-      };
     }
+    return {status: 'not_configured', message: 'Firebase 尚未完成設定'};
   },
 
   /**
    * 取得指定班級前 10 名排行榜
    */
   async getLeaderboard(classId) {
-    try {
-      const url = `${CAI_CONFIG.GAS_API_URL}?unitName=DynaSoKOBAN&action=getLeaderboard&classId=${encodeURIComponent(classId || '')}`;
-      const res = await fetch(url);
-      return await res.json();
-    } catch (err) {
-      console.warn('無法取得排行榜:', err);
-      return {
-        status: 'error',
-        topList: []
-      };
+    if (window.FirebaseService && FirebaseService.isConfigured()) {
+      return FirebaseService.getLeaderboard(CAI_CONFIG.UNIT_NAME, classId);
     }
+    return {status: 'not_configured', topList: [], message: 'Firebase 尚未完成設定'};
   }
 };
 

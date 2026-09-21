@@ -73,39 +73,34 @@ test('GAS validates score fields, protects sheet text and deduplicates retries',
 });
 function frontend(fetch) {
   const elements = new Map();
+  const firebaseCalls = [];
+  const firebaseService = {
+    isConfigured:()=>true,
+    submitScore:async data=>{firebaseCalls.push(data);return {status:'success'};}
+  };
   const context = vm.createContext({crypto,fetch,AbortController,setTimeout,clearTimeout,
     atob:value=>Buffer.from(value,'base64').toString('binary'),
-    window:{addEventListener(){}},document:{getElementById:id=>{
+    FirebaseService:firebaseService,
+    window:{addEventListener(){},FirebaseService:firebaseService},document:{getElementById:id=>{
       if(!elements.has(id)) elements.set(id,{}); return elements.get(id);
     }},console});
   vm.runInContext(read('app.js'),context);
-  context.testToken = token();
-  vm.runInContext('gameState.challenge.completed=true; gameState.student.authenticated=true; gameState.student.idToken=testToken;',context);
-  return {context,elements};
+  vm.runInContext('gameState.challenge.completed=true; gameState.student.registered=true; gameState.student.email="student@st.tc.edu.tw";',context);
+  return {context,elements,firebaseCalls};
 }
-test('upload only confirms matching server receipts and preserves ID across retries',async()=>{
-  let mode = 'network', ids = [];
-  const {context,elements} = frontend(async (_url, options)=>{
-    const body = JSON.parse(options.body); ids.push(body.submissionId);
-    assert.ok(body.idToken); assert.equal(body.email,undefined); assert.notEqual(options.mode,'no-cors');
-    if(mode==='network') throw new Error('offline');
-    return {ok:true,json:async()=> mode==='success'?{status:'success',submissionId:body.submissionId}:{status:'error',message:'憑證過期'}};
-  });
+test('upload sends the unified score shape to Firebase',async()=>{
+  const {context,elements,firebaseCalls} = frontend(async()=>{});
   await context.uploadScoreToGAS();
-  assert.match(elements.get('certCloudSyncPill').className,/error/);
-  mode='rejected'; await context.uploadScoreToGAS();
-  assert.match(elements.get('certCloudSyncText').innerText,/憑證過期/);
-  mode='success'; await context.uploadScoreToGAS();
   assert.match(elements.get('certCloudSyncPill').className,/success/);
-  assert.equal(new Set(ids).size,1);
+  assert.equal(firebaseCalls.length,1);
+  assert.deepEqual(
+    Object.fromEntries(['classId','seatNo','email'].map(key => [key, firebaseCalls[0].profile[key]])),
+    {classId:'201',seatNo:'1',email:'student@st.tc.edu.tw'}
+  );
 });
-test('guest and expired logins never submit a score',async()=>{
-  let calls=0;
-  const {context,elements} = frontend(async()=>{calls++;});
-  vm.runInContext('gameState.student.authenticated=false;',context);
+test('guest mode does not submit a formal score',async()=>{
+  const {context,firebaseCalls} = frontend(async()=>{});
+  vm.runInContext('gameState.student.registered=false;',context);
   await context.uploadScoreToGAS();
-  context.testToken=token({exp:1});
-  vm.runInContext('gameState.student.authenticated=true; gameState.student.idToken=testToken;',context);
-  await context.uploadScoreToGAS();
-  assert.equal(calls,0); assert.match(elements.get('certCloudSyncText').innerText,/重新登入/);
+  assert.equal(firebaseCalls[0].isGuest,true);
 });

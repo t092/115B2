@@ -25,18 +25,24 @@ test('shared GAS routes dynasty scores to separate sheets with verified identity
  assert.equal(sheets.get('朝代方塊_即時排行榜').rows.length,2);
  assert.equal(context.doGet({parameter:{}}).status,'online');
 });
-test('client shares G2B3 OAuth and sends credential plus routing discriminator',async()=>{
- const storage=new Map(),calls=[];
- const c=vm.createContext({window:{},sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},atob:s=>Buffer.from(s,'base64').toString('binary'),console,
- fetch:async(url,options)=>{calls.push({url,options});return {ok:true,json:async()=>({status:'success'})};}});
- vm.runInContext(read('DynaSoKOBAN/cai-service.js'),c);
- const config=vm.runInContext('CAI_CONFIG',c),api=c.window.CAI;
- assert.ok(read('G2B3/app.js').includes(config.CLIENT_ID));assert.ok(read('G2B3/app.js').includes(config.GAS_API_URL));
- api.setGuestMode();assert.equal((await api.submitScore({})).status,'guest');assert.equal(calls.length,0);
- const idToken='x.'+Buffer.from(JSON.stringify({exp:Date.now()/1000+300})).toString('base64url')+'.x';
- api.setStudent({email:'student@st.tc.edu.tw',idToken,name:'學生',classId:'201',seatNo:'1'});
- assert.equal((await api.submitScore({totalScore:10})).status,'success');
- const body=JSON.parse(calls[0].options.body);assert.equal(body.idToken,idToken);assert.equal(body.unitName,'DynaSoKOBAN');assert.equal(body.email,undefined);
- await api.getLeaderboard('201');assert.match(calls[1].url,/unitName=DynaSoKOBAN/);
- api.logout();assert.equal(api.getStudent(),null);
+test('client submits dynasty scores through Firebase without Google authentication',async()=>{
+  const storage=new Map(),firebaseCalls=[];
+  const firebaseService={
+   isConfigured:()=>true,
+   setStudentProfile:profile=>firebaseCalls.push({type:'profile',profile}),
+   submitScore:async data=>{firebaseCalls.push({type:'submit',data});return {status:'success'}},
+   getLeaderboard:async()=>({status:'error',topList:[]})
+  };
+  const c=vm.createContext({window:{FirebaseService:firebaseService},FirebaseService:firebaseService,
+  sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},console});
+  vm.runInContext(read('DynaSoKOBAN/cai-service.js'),c);
+  const config=vm.runInContext('CAI_CONFIG',c),api=c.window.CAI;
+  assert.equal(config.UNIT_NAME,'DynaSoKOBAN');
+  api.setGuestMode();assert.equal((await api.submitScore({})).status,'guest');assert.equal(firebaseCalls.length,0);
+  api.setStudent({name:'學生',email:'student@st.tc.edu.tw',registered:true,classId:'201',seatNo:'1'});
+  assert.equal((await api.submitScore({totalScore:10})).status,'success');
+  assert.equal(firebaseCalls.find(call=>call.type==='submit').data.profile.classId,'201');
+  assert.equal(firebaseCalls.find(call=>call.type==='submit').data.isGuest,false);
+  await api.getLeaderboard('201');
+  api.logout();assert.equal(api.getStudent(),null);
 });

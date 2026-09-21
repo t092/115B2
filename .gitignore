@@ -1,3 +1,6 @@
 node_modules/
 /graphify-out/
 /test-results/
+*service-account*.json
+firebase-adminsdk-*.json
+115學習帳號.csv

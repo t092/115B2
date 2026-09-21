@@ -10,6 +10,10 @@
 .
 ├── index.html        # 課程入口首頁（目前開放第一課，其餘為預告卡片）
 ├── hub.css           # 入口首頁樣式，使用原生 CSS
+├── firebase-config.js    # Firebase Web App 設定
+├── firebase-service.js   # Firebase 名冊、工作階段與成績服務
+├── firebase-rules/       # Firestore Rules
+├── FIREBASE_SETUP.md     # Firebase 建置與名冊匯入說明
 │
 └── G2B3/             # 【第 1 課】商周至隋唐的國家與社會（獨立完整專案）
     ├── index.html    # 第 1 課作業主頁（重點講義 ✕ 5道闖關遊戲）
@@ -18,7 +22,7 @@
     ├── detective.js  # 歷史除錯關卡
     ├── maze-scene.bundle.js # 3D時空迷宮打包
     ├── maze-adventure.js    # 迷宮控制
-    ├── gas/          # Google Apps Script 後端程式與 clasp 設定
+    ├── gas/          # 舊版 GAS 程式，僅供歷史資料與回溯
     └── vendor/       # Three.js 等函式庫
 ```
 
@@ -26,11 +30,12 @@
 
 ## 獨立性與隔離規範
 
-1. **成績登錄隔離**：
-   - 各單元使用自己的 Google Form 與回覆試算表，學生完成遊戲後上傳通關證書截圖。
-   - 舊版 Google OAuth / GAS API 原始碼保留作相容與回溯用途，入口流程不再要求學生先通過自建 OAuth App。
-2. **GAS（試算表成績系統）隔離**：
-   - 各單元的後端 Apps Script 與試算表均獨立配置，彼此資料表結構與 API 端點互不干擾。
+1. **學習帳號名冊**：
+   - Firebase `students` 集合以 Email 作為文件 ID，保存班級、座號、名冊姓名與 Email。
+   - 學生輸入帳號後由 Firebase 查詢名冊；查不到的帳號只可作為訪客體驗。
+2. **成績格式統一**：
+   - 所有單元寫入 Firebase `scores` 集合，固定包含 `class`、`seat`、`email`、`unitName` 與 `totalScore`。
+   - 舊版 Google Form、Google OAuth、GAS API 原始碼保留作歷史資料與回溯用途。
 3. **路徑相對引用**：
    - 各章節內部皆使用相對路徑，可獨立部署或透過 Hub 入口跳轉。
 
@@ -53,13 +58,13 @@ npm run test:browser
 
 ## 成績登錄與部署
 
-- 未登入者可以練習及取得證書；完成後須將證書截圖上傳至該遊戲專屬 Google Form。
-- 每個遊戲各有一份 Google Form；同一遊戲內相同 Email 的新紀錄會取代舊紀錄，舊資料保留並標記為「已被新紀錄取代」。
-- Google Form 的預填成績仍需由老師以證書截圖核對，不是防止前端竄改的安全機制。
-- 成績只在後端確認寫入並回傳同一作業識別碼後顯示成功。連線失敗會提示重試；同一頁面的同一份作業重試不會重複寫入。
+- 不在 `students` 名冊中的學生可以練習及取得證書，但不會寫入正式成績。
+- 名冊學生完成遊戲後，成績寫入 Firebase `scores` 集合，並標記為待教師核對。
+- 姓名可由學生使用課堂代號顯示；班級、座號與 Email 由名冊資料帶入。
+- 成績只在 Firebase 確認寫入後顯示成功；連線失敗會提示重試。
 - 已完成作業可在證書區重新登入並重試上傳。重新整理頁面會清除遊戲與登入狀態，請先完成上傳或複製成績報告。
-- 後端驗證 Google RSA 簽章、用戶端 ID、簽發者、有效期限、已驗證 Email 與學校 `hd` 網域；不採用前端自行傳入的 Email。
-- 分數目前仍由前端計算；後端範圍檢查並不等同伺服器重新計分或完整防作弊。
+- Firestore Rules 驗證匿名工作階段、名冊 Email、班級座號對應與分數範圍。
+- 分數目前仍由前端計算；Rules 檢查不等同伺服器重新計分或完整防作弊。
 
 部署步驟見 [G2B3/gas/README.md](G2B3/gas/README.md)。前後端必須配套更新，舊版 GAS 不支援新的憑證驗證與回執。
 

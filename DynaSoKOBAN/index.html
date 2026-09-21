@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>中國朝代 SOKOBAN · 學習作業</title>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="../firebase-service.js"></script>
 <script src="cai-service.js?v=20260921-form3"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -104,6 +109,7 @@
     display: flex; align-items: center; justify-content: center;
   }
   .modal-overlay.hidden { display: none; }
+  .step-hidden { display: none; }
   .modal-box {
     background: #2a2420; border: 2px solid #8d7a58;
     border-radius: 14px; padding: 28px 36px; text-align: center;
@@ -137,14 +143,14 @@
   <div id="stage"></div>
 
   <div id="startWrap">
-    <!-- 未登入畫面 -->
+     <!-- 學生資料畫面 -->
      <div id="loginSection" class="auth-section">
-       <p style="font-size:15px; color:#e0cfA8; letter-spacing:2px; margin-bottom:14px; font-weight:bold;">免登入開始學習作業</p>
-       <div id="googleBtnContainer" style="display:flex; justify-content:center; margin-bottom:12px;"></div>
+       <p style="font-size:15px; color:#e0cfA8; letter-spacing:2px; margin-bottom:14px; font-weight:bold;">不用 Google 登入也能開始</p>
        <div>
-         <button id="guestBtn" class="sec-btn" onclick="handleGuestMode()">🎮 開始作業（完成後填寫成績表單）</button>
+         <button id="studentBtn" class="confirm-btn" onclick="openStudentForm()">📝 填寫資料並開始作業</button>
+         <button id="guestBtn" class="sec-btn" onclick="handleGuestMode()">🎮 純體驗（不記錄成績）</button>
        </div>
-       <p class="notice-text">※ 完成遊戲後請截圖通關證書，登入 Google Form 上傳證書並填寫成績。</p>
+       <p class="notice-text">※ 學籍資料由學生填寫，成績送出後標記為待教師核對。</p>
     </div>
 
     <!-- 已登入/體驗狀態畫面 -->
@@ -162,22 +168,41 @@
     </div>
   </div>
 
-  <!-- 學生首次確認班級座號彈窗 -->
+  <!-- 學生確認資料彈窗 -->
   <div id="classSeatModal" class="modal-overlay hidden">
     <div class="modal-box">
-      <h3>確認學籍資料</h3>
-      <p id="modalStudentName">同學您好，請填寫班級與座號以記錄成績：</p>
-      <div class="input-row">
+      <h3>學習帳號確認</h3>
+      <div id="emailStep">
+        <p>請先輸入學習帳號 Email 查詢名冊：</p>
         <div class="input-group">
-          <label for="inputClass">班級 (如 702)</label>
-          <input id="inputClass" type="text" maxlength="4" placeholder="702">
+          <label for="inputEmail">學習帳號 Email</label>
+          <input id="inputEmail" type="email" placeholder="例如 940791@st.tc.edu.tw">
         </div>
-        <div class="input-group">
-          <label for="inputSeat">座號 (如 05)</label>
-          <input id="inputSeat" type="text" maxlength="2" placeholder="05">
-        </div>
+        <button class="confirm-btn" onclick="lookupStudentAccount()">查詢帳號</button>
       </div>
-      <button class="confirm-btn" onclick="confirmClassSeat()">完成進入作業</button>
+      <div id="profileStep" class="step-hidden">
+        <p>請確認資料；班級與座號由名冊帶入，不可修改。</p>
+        <div class="input-row">
+          <div class="input-group">
+            <label for="inputClass">班級</label>
+            <input id="inputClass" type="text" readonly>
+          </div>
+          <div class="input-group">
+            <label for="inputSeat">座號</label>
+            <input id="inputSeat" type="text" readonly>
+          </div>
+          <div class="input-group">
+            <label for="inputName">姓名（可修改）</label>
+            <input id="inputName" type="text" maxlength="20">
+          </div>
+        </div>
+        <button class="confirm-btn" onclick="confirmClassSeat()">確認並開始遊戲</button>
+      </div>
+      <div id="guestStep" class="step-hidden">
+        <p>您可以以訪客模式遊玩。</p>
+        <p class="notice-text">訪客模式可以體驗遊戲，但不會登錄正式成績。</p>
+        <button class="confirm-btn" onclick="startGuestFromLogin()">以訪客模式開始</button>
+      </div>
     </div>
   </div>
 
@@ -201,7 +226,6 @@ const DYNASTIES = [
 
 const stage = document.getElementById('stage');
 const startWrap = document.getElementById('startWrap');
-let pendingGooglePayload = null;
 
 function shuffle(arr) {
   const a = [...arr];
@@ -260,7 +284,7 @@ function playIntro() {
   }, maxDelay + 600);
 }
 
-// 渲染登入或使用者卡片狀態
+// 渲染學生資料或體驗狀態
 function renderAuthUI() {
   const student = CAI.getStudent();
   const loginSec = document.getElementById('loginSection');
@@ -272,7 +296,7 @@ function renderAuthUI() {
     loginSec.style.display = 'none';
     userSec.style.display = 'block';
     if (student.isGuest) {
-      userBadge.innerHTML = '👤 免登入作業模式 <span class="guest-badge">完成後填寫表單</span>';
+      userBadge.innerHTML = '👤 純體驗模式 <span class="guest-badge">不記錄成績</span>';
       startBtn.textContent = '開始作業';
     } else if (student.isTeacher) {
       userBadge.textContent = '👤 教師測試模式';
@@ -287,74 +311,52 @@ function renderAuthUI() {
   }
 }
 
-// 初始化 Google 登入按鈕
-function initGoogleLoginButton() {
-  if (window.location.protocol === 'file:') {
-    document.getElementById('googleBtnContainer').textContent = '直接開啟本機檔案時請使用免登入體驗；學校登入請用正式網站或已授權的 localhost。';
-    return;
-  }
-  if (!window.google || !google.accounts || !google.accounts.id) {
-    setTimeout(initGoogleLoginButton, 300);
-    return;
-  }
-  const container = document.getElementById('googleBtnContainer');
-  if (!container || container.childElementCount > 0) return;
-
-  google.accounts.id.initialize({
-    client_id: CAI_CONFIG.CLIENT_ID,
-    callback: handleGoogleCredentialResponse,
-    hd: CAI_CONFIG.HOSTED_DOMAIN,
-    auto_select: false
-  });
-
-  google.accounts.id.renderButton(container, {
-    theme: 'filled_blue',
-    size: 'large',
-    shape: 'pill',
-    text: 'signin_with',
-    width: 260
-  });
-}
-
-// 接收 Google 登入憑證回傳
-function handleGoogleCredentialResponse(response) {
-  const payload = CAI.decodeJwt(response.credential);
-  if (!payload || !payload.email) {
-    alert('登入驗證失敗，請重試');
-    return;
-  }
-
-  if (payload.email.split('@')[1] !== CAI_CONFIG.HOSTED_DOMAIN || payload.hd !== CAI_CONFIG.HOSTED_DOMAIN) {
-    alert('請使用學校 @' + CAI_CONFIG.HOSTED_DOMAIN + ' 帳號登入');
-    return;
-  }
-  // 一般學生：跳出班級座號確認彈窗
-  pendingGooglePayload = {...payload, idToken: response.credential};
-  document.getElementById('modalStudentName').textContent = `${payload.name || '同學'} 您好，請輸入班級與座號：`;
+function openStudentForm() {
+  const student = CAI.getStudent();
+  document.getElementById('inputEmail').value = student && !student.isGuest ? student.email || '' : '';
+  document.getElementById('inputClass').value = '';
+  document.getElementById('inputSeat').value = '';
+  document.getElementById('inputName').value = '';
+  document.getElementById('emailStep').classList.remove('step-hidden');
+  document.getElementById('profileStep').classList.add('step-hidden');
+  document.getElementById('guestStep').classList.add('step-hidden');
   document.getElementById('classSeatModal').classList.remove('hidden');
 }
 
-// 學生確認班級座號
-function confirmClassSeat() {
-  const c = document.getElementById('inputClass').value.trim();
-  const s = document.getElementById('inputSeat').value.trim();
-  if (!c || !s) {
-    alert('請完整填寫班級與座號！');
+async function lookupStudentAccount() {
+  const email = document.getElementById('inputEmail').value.trim();
+  if (!email) {
+    alert('請輸入學習帳號 Email！');
     return;
   }
-  if (!pendingGooglePayload) return;
+  const result = await FirebaseService.loginStudent(email);
+  if (result.status === 'registered') {
+    document.getElementById('inputClass').value = result.profile.classId;
+    document.getElementById('inputSeat').value = result.profile.seatNo;
+    document.getElementById('inputName').value = result.profile.name;
+    document.getElementById('emailStep').classList.add('step-hidden');
+    document.getElementById('profileStep').classList.remove('step-hidden');
+    return;
+  }
+  document.getElementById('emailStep').classList.add('step-hidden');
+  document.getElementById('guestStep').classList.remove('step-hidden');
+}
 
-  CAI.setStudent({
-    email: pendingGooglePayload.email,
-    idToken: pendingGooglePayload.idToken,
-    name: pendingGooglePayload.name || '學生',
-    classId: c,
-    seatNo: s,
-    isTeacher: false
-  });
+// 確認名冊資料並開始遊戲
+async function confirmClassSeat() {
+  const email = document.getElementById('inputEmail').value.trim();
+  const alias = document.getElementById('inputName').value.trim();
+  const result = await FirebaseService.loginStudent(email, alias);
+  if (result.status !== 'registered') return;
+  CAI.setStudent({...result.profile, isTeacher: false});
 
   document.getElementById('classSeatModal').classList.add('hidden');
-  pendingGooglePayload = null;
+  renderAuthUI();
+}
+
+function startGuestFromLogin() {
+  CAI.setGuestMode();
+  document.getElementById('classSeatModal').classList.add('hidden');
   renderAuthUI();
 }
 

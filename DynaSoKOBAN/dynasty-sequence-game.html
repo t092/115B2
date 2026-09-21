@@ -4,7 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>朝代連號消消樂</title>
-<script src="cai-service.js?v=20260921-form3"></script>
+      <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+      <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+      <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+      <script src="../firebase-config.js"></script>
+      <script src="../firebase-service.js"></script>
+      <script src="cai-service.js?v=20260921-form3"></script>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -85,7 +90,7 @@
 
   <section id="locked" class="locked hidden">
     <h2>目前無法進入隱藏關</h2>
-    <p>本關只開放給已登入學生與教師測試帳號。</p>
+    <p>本關只開放給已填寫學籍資料的作業模式。</p>
     <button onclick="location.href='index.html'">返回首頁</button>
   </section>
 </main>

@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>朝代關卡遊戲 · 學習作業</title>
-<script src="cai-service.js?v=20260921-form3"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <script src="../firebase-service.js"></script>
+  <script src="cai-service.js?v=20260921-form3"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -216,9 +221,10 @@ const ROWS = 9, COLS = 12;
 // ---- 學生學籍身分初始化 ----
 let currentStudent = CAI.getStudent();
 if (!currentStudent) {
-  // 未登入直接進入本頁面時，預設給予訪客體驗身分
+  // 直接進入本頁面時，預設給予純體驗身分
   currentStudent = CAI.setGuestMode();
 }
+let lastScoreSubmission = null;
 
 function updateStudentHud() {
   const badge = document.getElementById('hudStudentBadge');
@@ -227,7 +233,7 @@ function updateStudentHud() {
   const localTestMode = window.location.protocol === 'file:'
     || new URLSearchParams(window.location.search).get('testMode') === '1';
   if (currentStudent.isGuest) {
-    badge.innerHTML = '👤 免登入作業 <span class="tag-guest">完成後填寫表單</span>';
+  badge.innerHTML = '👤 純體驗作業 <span class="tag-guest">不記錄成績</span>';
     teacherControl.style.display = localTestMode ? 'inline-flex' : 'none';
     hiddenOption.hidden = true;
     if (document.getElementById('testLevelSelect').value === '6') {
@@ -619,18 +625,22 @@ function showModal(title, bodyHtml) {
   document.getElementById('modal').classList.remove('hidden');
 }
 
-function openDynaScoreForm(score, timeStr) {
-  const student = CAI.getStudent() || {};
-  CAI.openScoreForm({
-    className: student.classId || '',
-    seat: student.seatNo || '',
-    name: student.name || '',
-    score
-  });
+async function retryDynaScore() {
+  if (!lastScoreSubmission) return;
+  const result = await CAI.submitScore(lastScoreSubmission);
+  const status = result.status === 'success'
+    ? '✅ 成績已送出，等待教師核對。'
+    : `⚠️ 成績送出失敗：${result.message || '請稍後重試'}`;
+  const node = document.getElementById('dynaScoreStatus');
+  if (node) node.textContent = status;
 }
 
-function showDynaCertificate(score, moves, timeStr) {
+function showDynaCertificate(score, moves, timeStr, submissionResult) {
   const student = CAI.getStudent() || {};
+  const submitted = submissionResult && submissionResult.status === 'success';
+  const statusText = submitted
+    ? '✅ 成績已送出，等待教師核對。'
+    : `⚠️ ${submissionResult?.message || '尚未送出成績，請稍後重試。'}`;
   showModal('🎉 全部通關！', `
     <div class="certificate-preview" id="dynaCertificate">
       <h3>中國朝代 SOKOBAN</h3>
@@ -641,10 +651,10 @@ function showDynaCertificate(score, moves, timeStr) {
       <p>總耗時：${timeStr}</p>
       <p>勳章：朝代順序挑戰完成</p>
     </div>
-    <p style="font-size:13px; color:#e0b46a;">請先截圖保存上方證書，再登入 Google Form 填寫分數並上傳截圖。</p>
+    <p id="dynaScoreStatus" style="font-size:13px; color:${submitted ? '#7ec488' : '#e0b46a'};">${statusText}</p>
     <div class="certificate-actions">
       <button class="btn-sec" onclick="event.stopPropagation(); downloadDynaCertificate();">⬇️ 下載 PDF 證書</button>
-      <button class="btn-gold" onclick="event.stopPropagation(); openDynaScoreForm(${score}, '${timeStr}');">📋 填寫成績表單</button>
+      ${submitted ? '' : '<button class="btn-gold" onclick="event.stopPropagation(); retryDynaScore();">🔄 重試送出成績</button>'}
     </div>
   `);
 }
@@ -702,7 +712,7 @@ async function gameOverModal() {
       : `<p style="font-size:12px; color:#e07e6a;">⚠ 成績同步失敗：${res?.message || '未知錯誤'}</p>`;
     showModal('作業結束', summaryText + rankNote + syncNote);
   } else {
-    showModal('作業結束', summaryText + '<p style="font-size:12px; color:#b9a98c;">※ 提示：使用學習帳號登入可記錄成績與登上排行榜。</p>');
+    showModal('作業結束', summaryText + '<p style="font-size:12px; color:#b9a98c;">※ 純體驗模式不記錄成績；返回首頁填寫學籍資料後即可提交正式成績。</p>');
   }
 }
 
@@ -773,47 +783,18 @@ async function checkWin() {
       const seconds = duration % 60;
       const timeStr = `${minutes}分${seconds}秒`;
 
-      /* 成績改由通關證書 Google Form 登錄，不在遊戲中呼叫舊版 GAS API。 */
-      if (false && CAI.isLoggedIn()) {
-        showModal('🎉 全部通關！', `
-          <p>恭喜完成五千年歷史時序！</p>
-          <p>本關獲得 <b>${levelScore}</b> 分 · 總得分 <b>${totalScore}</b> 分</p>
-          <p style="font-size:14px; color:#b9a98c;">總步數：${totalMovesAllLevels} 步 · 總耗時：${timeStr}</p>
-          <p style="font-size:13px; color:#e0b46a;">成績同步中...</p>
-        `);
-
-        const res = await CAI.submitScore({
-          totalScore,
-          moves: totalMovesAllLevels,
-          durationSeconds: duration,
-          maxLevel: 5,
-          isCompleted: true,
-          levelDetails: levelDetailsLog
-        });
-
-        let rankHtml = '';
-        if (res && res.rank) {
-          rankHtml = `
-            <p style="color:#e0b46a; font-size:17px; margin-top:10px;">
-              🏆 目前名列 <b>${res.classId} 班 第 ${res.rank} 名</b>
-            </p>
-            <p style="color:#b9a98c; font-size:13px;">超越了全班 ${res.percentile}% 的同學！</p>
-          `;
-        }
-        if (res && res.isNewRecord) {
-          rankHtml += `<p style="color:#f1c40f; font-weight:bold;">🌟 恭喜刷新個人最佳紀錄！</p>`;
-        }
-
-        showModal('🎉 全部通關！', `
-          <p>恭喜完成五千年歷史時序！</p>
-          <p>總得分：<b>${totalScore}</b> 分（總步數 ${totalMovesAllLevels} 步）</p>
-          <p style="font-size:14px; color:#b9a98c;">耗時：${timeStr}</p>
-          ${rankHtml}
-          <p style="font-size:12px; color:${res && res.status === 'success' ? '#7ec488' : '#e07e6a'}; margin-top:12px;">${res && res.status === 'success' ? '✓ 成績已存入老師的計分簿' : `⚠ 成績同步失敗：${res?.message || '未知錯誤'}`}</p>
-        `);
-      } else {
-        showDynaCertificate(totalScore, totalMovesAllLevels, timeStr);
-      }
+      lastScoreSubmission = {
+        totalScore,
+        moves: totalMovesAllLevels,
+        durationSeconds: duration,
+        maxLevel: 5,
+        isCompleted: true,
+        levelDetails: levelDetailsLog
+      };
+      const submissionResult = currentStudent.isGuest
+        ? {status: 'guest', message: '純體驗模式不記錄成績'}
+        : await CAI.submitScore(lastScoreSubmission);
+      showDynaCertificate(totalScore, totalMovesAllLevels, timeStr, submissionResult);
     } else {
       pendingAction = 'next';
       let syncText = '';
@@ -912,6 +893,10 @@ async function openLeaderboardModal() {
   modal.classList.remove('hidden');
 
   const data = await CAI.getLeaderboard(classId === '教師' ? '' : classId);
+  if (data && data.status !== 'success') {
+    content.innerHTML = '<p style="color:#b9a98c; padding:20px;">排行榜將在教師核對成績後開放。</p>';
+    return;
+  }
   if (!data || !data.topList || data.topList.length === 0) {
     content.innerHTML = '<p style="color:#b9a98c; padding:20px;">目前尚無挑戰紀錄，快成為第一位通關者！</p>';
     return;

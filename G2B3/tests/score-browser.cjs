@@ -10,17 +10,22 @@ const {pathToFileURL} = require('node:url');
     await page.route('https://**/*',route=>route.abort());
     await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href,{waitUntil:'domcontentloaded'});
     await page.evaluate(()=>{sounds.enabled=false;gameState.challenge.completed=true;gameState.score=125;goToUnit('tab-summary');});
-    assert.match(await page.locator('#certCloudSyncText').innerText(),/截圖|Google/);
+    assert.match(await page.locator('#certCloudSyncText').innerText(),/Firebase/);
     await page.evaluate(()=>{
-      window.SCORE_FORM_CONFIG.URL='https://example.test/test-form';
-      window.open=url=>{window.__openedScoreForm=url;};
+      window.FirebaseService={
+        isConfigured:()=>true,
+        submitScore:async()=>({status:'success'})
+      };
+      gameState.student.registered=true;
+      gameState.student.email='student@st.tc.edu.tw';
     });
-    await page.getByRole('button',{name:'填寫成績登錄表'}).click();
-    assert.match(await page.evaluate(()=>window.__openedScoreForm),/example\.test\/test-form/);
+    await page.getByRole('button',{name:/儲存成績至 Firebase/}).click();
+    await page.waitForTimeout(50);
+    assert.match(await page.locator('#certCloudSyncText').innerText(),/等待教師核對/);
     assert.equal(await page.evaluate(()=>gameState.score),125);
     assert.equal(await page.evaluate(()=>gameState.challenge.completed),true);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     assert.deepEqual(errors,[]);
-    console.log('PASS score UI: certificate guidance, form link and completion preserved');
+    console.log('PASS score UI: Firebase guidance, save action and completion preserved');
   } finally { await browser.close(); }
 })().catch(error=>{console.error(error);process.exitCode=1;});

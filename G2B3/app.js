@@ -10,18 +10,11 @@
  */
 
 // ==========================================
-// 學校 Google 帳號認證與成績試算表串接設定
-// 日後各單元只需改 UNIT_NAME，試算表會全自動建立該單元頁籤！
+// Firebase 學習帳號與成績服務設定
 // ==========================================
 const SCHOOL_AUTH_CONFIG = {
-  // Google OAuth 2.0 用戶端 ID；網站與 localhost 來源須在此用戶端設定中授權。
-  CLIENT_ID: '403500919614-4c109l85fn6hul7nng2nskbs9kn4reis.apps.googleusercontent.com',
-  // Google Apps Script 萬能多頁籤成績接收 Web App 網址
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbzjetB7qPpquboR0rnMyvWNOQxAi3AbzSPNiVsiEiEnrxvckNH3X1_z4AzSctdJVFbIQQ/exec',
-  // 本教學單元名稱（試算表以此名稱自動新增或記錄分頁）
   UNIT_NAME: '二上第1課_商周至隋唐的國家與社會',
-  // 限定學生學校帳號網域
-  REQUIRED_DOMAIN: 'st.tc.edu.tw'
+  SCORE_UNIT_ID: 'G2B3'
 };
 
 // Google Form 由老師執行 G2B3/gas/CreateScoreForms.js 建立後填入網址。
@@ -121,6 +114,7 @@ const gameState = {
     seat: '1',
     name: '歷史探險家',
     email: '',
+    registered: false,
     authenticated: false,
     idToken: ''
   },
@@ -251,125 +245,17 @@ const stageNames = [
   '關卡 5：歷史除錯官'
 ];
 
-// ==========================================
-// 學校 Google 帳號認證與試算表資料串接
-// ==========================================
-function initGoogleAuth() {
-  if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-    setTimeout(initGoogleAuth, 300);
-    return;
-  }
-
-  try {
-    google.accounts.id.initialize({
-      client_id: SCHOOL_AUTH_CONFIG.CLIENT_ID,
-      callback: handleGoogleAuthCallback,
-      auto_select: false,
-      cancel_on_tap_outside: false
-    });
-    renderGoogleLoginButton();
-  } catch (err) {
-    console.warn('Google 帳號認證服務初始化提示：', err);
-  }
-}
-
-function renderGoogleLoginButton() {
-  const container = document.getElementById('googleSignInContainer');
-  if (!container || typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
-
-  try {
-    google.accounts.id.renderButton(container, {
-      theme: 'outline',
-      size: 'large',
-      type: 'standard',
-      shape: 'pill',
-      text: 'signin_with',
-      locale: 'zh-TW',
-      width: 280
-    });
-  } catch (e) {
-    console.warn('Google 登入按鈕渲染提示：', e);
-  }
-}
-
 function openScoreForm() {
-  if (!SCORE_FORM_CONFIG.URL) {
-    alert('成績登錄表尚未設定，請稍後再試或通知老師。');
+  if (window.FirebaseService && FirebaseService.isConfigured()) {
+    uploadScoreToGAS();
     return;
   }
-  const values = {
-    className: document.getElementById('studentClass')?.value || '',
-    seat: document.getElementById('studentSeat')?.value || '',
-    name: document.getElementById('studentName')?.value || '',
-    score: String(gameState.score)
-  };
-  const params = new URLSearchParams();
-  Object.keys(values).forEach(key => {
-    const entry = SCORE_FORM_CONFIG.ENTRIES[key];
-    if (entry && values[key]) params.set(`entry.${entry}`, values[key]);
-  });
-  const separator = SCORE_FORM_CONFIG.URL.includes('?') ? '&' : '?';
-  const url = params.toString() ? `${SCORE_FORM_CONFIG.URL}${separator}${params}` : SCORE_FORM_CONFIG.URL;
-  window.open(url, '_blank', 'noopener');
-}
-
-function parseJwt(token) {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    return null;
-  }
-}
-
-function handleGoogleAuthCallback(response) {
-  gameState.student.authenticated = false;
-  gameState.student.idToken = '';
-  gameState.student.email = '';
-  const payload = parseJwt(response.credential);
-  if (!payload || !payload.email) {
-    alert('身分認證失敗：無法取得 Google 帳號資料，請再試一次。');
-    return;
-  }
-
-  const email = payload.email.trim().toLowerCase();
-  const domain = email.split('@')[1] || '';
-
-  // 1. 強制限定 @st.tc.edu.tw
-  if (domain !== SCHOOL_AUTH_CONFIG.REQUIRED_DOMAIN) {
-    const box = document.getElementById('authStatusBox');
-    if (box) {
-      box.className = 'auth-status-box error';
-      box.innerHTML = `<span class="auth-status-icon">❌</span> <span>認證未通過：僅接受 @${SCHOOL_AUTH_CONFIG.REQUIRED_DOMAIN} 學生帳號</span>`;
-    }
-    alert(`身分認證未通過！\n您登入的帳號是：${email}\n本作業限定臺中市學生 Google 帳號（@${SCHOOL_AUTH_CONFIG.REQUIRED_DOMAIN}）登入！`);
-    return;
-  }
-
-  // 2. 認證通過
-  gameState.student.email = email;
-  gameState.student.name = payload.name || payload.given_name || '學生';
-  gameState.student.authenticated = true;
-  gameState.student.idToken = response.credential;
-
-  const box = document.getElementById('authStatusBox');
-  if (box) {
-    box.className = 'auth-status-box success';
-    box.textContent = `✅ 已登入：${email}`;
-  }
-
-  // 自動帶入學生姓名
-  const regName = document.getElementById('regName');
-  if (regName) regName.value = gameState.student.name;
-  document.getElementById('studentName').value = gameState.student.name;
+  alert('Firebase 尚未完成設定，暫時無法儲存成績。');
 }
 
 let scoreUploadInFlight = false;
 let scoreSubmissionId = '';
+let pendingG2B3Profile = null;
 async function uploadScoreToGAS() {
   if (scoreUploadInFlight) return;
   const syncBox = document.getElementById('cloudSyncStatusBox');
@@ -393,57 +279,41 @@ async function uploadScoreToGAS() {
   }
 
   if (!gameState.challenge.completed) return;
-  const token = parseJwt(gameState.student.idToken || '');
-  if (!gameState.student.authenticated || !token || !Number.isFinite(token.exp) || token.exp * 1000 <= Date.now()) {
-    updateStatus('error', '⚠️', '成績尚未上傳：請先重新登入學校 Google 帳號，再按「重試上傳」。');
-    return;
-  }
-  if (!scoreSubmissionId) scoreSubmissionId = crypto.randomUUID();
-  updateStatus('uploading', '⏳', '正在確認成績登錄結果，請稍候...');
 
-  const payload = {
-    unitName: SCHOOL_AUTH_CONFIG.UNIT_NAME,
-    idToken: gameState.student.idToken,
-    submissionId: scoreSubmissionId,
-    class: gameState.student.class,
-    seat: gameState.student.seat,
-    name: gameState.student.name,
-    score: gameState.score,
-    stars: gameState.stars,
-    timeSpent: formatTimeChinese(gameState.challenge.seconds),
-    badges: Array.from(gameState.badges),
-    dateStr: new Date().toLocaleDateString('zh-TW')
-  };
-
-  scoreUploadInFlight = true;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000);
-  try {
-    const response = await fetch(SCHOOL_AUTH_CONFIG.GAS_URL, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
+  if (window.FirebaseService && FirebaseService.isConfigured()) {
+    updateStatus('uploading', '⏳', '正在儲存成績，請稍候...');
+    const result = await FirebaseService.submitScore({
+      unitId: 'G2B3',
+      profile: {
+        classId: gameState.student.class,
+        seatNo: gameState.student.seat,
+        name: gameState.student.name,
+        email: gameState.student.email,
+        registered: gameState.student.registered === true,
+        rosterName: gameState.student.rosterName
       },
-      body: JSON.stringify(payload)
+      score: gameState.score,
+      stars: gameState.stars,
+      durationSeconds: gameState.challenge.seconds,
+      badges: Array.from(gameState.badges),
+      completed: true,
+      isGuest: gameState.student.registered !== true
     });
-    const result = await response.json();
-    if (!response.ok || !result || result.status !== 'success' || result.submissionId !== scoreSubmissionId) {
-      throw new Error((result && result.message) || '未收到有效的登錄確認');
+    if (result.status === 'success') {
+      updateStatus('success', '☁️', '成績已送出，等待教師核對。');
+    } else if (result.status === 'guest') {
+      updateStatus('error', '👤', '目前是訪客模式，不會儲存正式成績。');
+    } else {
+      updateStatus('error', '⚠️', `成績儲存失敗：${result.message || '請稍後重試'}。`);
     }
-    updateStatus('success', '☁️', `成績已成功登錄至試算表 [${SCHOOL_AUTH_CONFIG.UNIT_NAME}] 頁籤！`);
-  } catch (err) {
-    updateStatus('error', '⚠️', `無法確認成績是否已登錄：${err.name === 'AbortError' ? '連線逾時' : err.message}。請重試上傳；同一份作業不會重複登錄。`);
-  } finally {
-    clearTimeout(timeout);
-    scoreUploadInFlight = false;
+    return result;
   }
+
+  updateStatus('error', '⚠️', 'Firebase 尚未完成設定，無法儲存成績。');
 }
 
 function startFullChallenge() {
   sounds.click();
-  document.querySelector('#studentRegistrationModal button[type="submit"]').textContent =
-    gameState.challenge.completed ? '確認資料並重試上傳' : '🚀 確認送出並開始挑戰！';
   // 彈出學籍資料登記視窗 (班級、座號、姓名，製作證書使用)
   const regClass = document.getElementById('regClass');
   const regSeat = document.getElementById('regSeat');
@@ -453,64 +323,107 @@ function startFullChallenge() {
   const curSeat = document.getElementById('studentSeat').value.trim();
   const curName = document.getElementById('studentName').value.trim();
 
-  if (curClass && regClass.querySelector(`option[value="${curClass}"]`)) {
-    regClass.value = curClass;
-  } else if (!regClass.value) {
-    regClass.value = '201';
-  }
-
-  const seatNum = curSeat ? curSeat.replace(/[^0-9]/g, '') : '';
-  if (seatNum && regSeat.querySelector(`option[value="${seatNum}"]`)) {
-    regSeat.value = seatNum;
-  } else if (!regSeat.value) {
-    regSeat.value = '1';
-  }
-
-  if (curName && curName !== '歷史探險家') regName.value = curName;
-  else if (!gameState.student.authenticated) regName.value = '';
-
-  // 嘗試渲染 Google 登入按鈕
-  renderGoogleLoginButton();
-
-  // 若在 file:// 模式，給予溫馨提示
-  if (window.location.protocol === 'file:') {
-    const box = document.getElementById('authStatusBox');
-    if (box && !gameState.student.authenticated) {
-      box.className = 'auth-status-box pending';
-      box.innerHTML = '<span class="auth-status-icon">💡</span> <span>本機檔案模式：發布至 GitHub Pages 後將自動啟用 Google 登入認證；目前可直接填寫開始測試。</span>';
-    }
-  }
+  document.getElementById('regEmail').value = gameState.student.email || '';
+  regClass.value = '';
+  regSeat.value = '';
+  regName.value = '';
+  pendingG2B3Profile = null;
+  document.getElementById('confirmRegistrationBtn').disabled = true;
+  document.getElementById('guestRegistrationBtn').hidden = true;
+  document.getElementById('authStatusText').textContent = '請輸入學習帳號查詢名冊資料。';
 
   document.getElementById('studentRegistrationModal').classList.add('show');
-  setTimeout(() => {
-    renderGoogleLoginButton();
-    if (regName && !regName.value) regName.focus();
-  }, 150);
+  setTimeout(() => document.getElementById('regEmail').focus(), 150);
 }
 
-function handleRegistrationSubmit(e) {
+async function lookupG2B3Student() {
+  const email = document.getElementById('regEmail').value.trim();
+  const status = document.getElementById('authStatusText');
+  if (!email) {
+    alert('請輸入學習帳號 Email！');
+    return;
+  }
+  status.textContent = '正在查詢學習帳號...';
+  const result = await FirebaseService.loginStudent(email);
+  if (result.status === 'registered') {
+    pendingG2B3Profile = result.profile;
+    document.getElementById('regClass').value = result.profile.classId;
+    document.getElementById('regSeat').value = result.profile.seatNo;
+    document.getElementById('regName').value = result.profile.name;
+    document.getElementById('confirmRegistrationBtn').disabled = false;
+    document.getElementById('guestRegistrationBtn').hidden = true;
+    status.textContent = '已找到學習帳號，請確認班級、座號與姓名。';
+  } else {
+    pendingG2B3Profile = null;
+    document.getElementById('confirmRegistrationBtn').disabled = true;
+    document.getElementById('guestRegistrationBtn').hidden = false;
+    status.textContent = '您可以以訪客模式遊玩。訪客模式不會登錄正式成績。';
+  }
+}
+
+function startG2B3Guest() {
+  const regName = document.getElementById('regName').value.trim() || '訪客';
+  gameState.student.class = '訪客';
+  gameState.student.seat = '00';
+  gameState.student.name = regName;
+  gameState.student.email = '';
+  gameState.student.registered = false;
+  gameState.student.authenticated = false;
+  document.getElementById('studentClass').value = '訪客';
+  document.getElementById('studentSeat').value = '00';
+  document.getElementById('studentName').value = regName;
+  updateCertificate();
+  closeModal('studentRegistrationModal');
+  if (gameState.challenge.completed) {
+    goToUnit('tab-summary');
+    return;
+  }
+  sounds.fanfare();
+  goToUnit('tab-challenge');
+  if (!gameState.challenge.started) {
+    gameState.challenge.started = true;
+    gameState.challenge.timer = setInterval(() => {
+      gameState.challenge.seconds++;
+      document.getElementById('challengeTimerText').innerText = formatTime(gameState.challenge.seconds);
+    }, 1000);
+  }
+  goToStage(1);
+}
+
+async function handleRegistrationSubmit(e) {
   e.preventDefault();
-  const regClass = document.getElementById('regClass').value.trim();
-  const regSeat = document.getElementById('regSeat').value.trim();
+  const regEmail = document.getElementById('regEmail').value.trim();
   const regName = document.getElementById('regName').value.trim();
 
-  if (!regClass || !regSeat || !regName) {
-    alert('請完整填寫班級、座號與姓名，以便為您製作專屬的學習成就證書！');
+  if (!regEmail || !pendingG2B3Profile) {
+    alert('請先查詢學習帳號，確認班級與座號後再開始遊戲。');
     return;
   }
 
-  gameState.student.class = regClass;
-  gameState.student.seat = regSeat;
-  gameState.student.name = regName;
+  const result = await FirebaseService.loginStudent(regEmail, regName);
+  if (result.status !== 'registered') {
+    alert(result.message);
+    return;
+  }
+  const profile = result.profile;
 
-  document.getElementById('studentClass').value = regClass;
-  document.getElementById('studentSeat').value = regSeat;
-  document.getElementById('studentName').value = regName;
+  gameState.student.class = profile.classId;
+  gameState.student.seat = profile.seatNo;
+  gameState.student.name = profile.name;
+  gameState.student.email = profile.email || '';
+  gameState.student.rosterName = profile.rosterName || '';
+  gameState.student.registered = result.status === 'registered';
+  gameState.student.authenticated = gameState.student.registered;
+
+  document.getElementById('studentClass').value = profile.classId;
+  document.getElementById('studentSeat').value = profile.seatNo;
+  document.getElementById('studentName').value = profile.name;
 
   updateCertificate();
   closeModal('studentRegistrationModal');
 
   if (gameState.challenge.completed) {
+    await uploadScoreToGAS();
     goToUnit('tab-summary');
     return;
   }
@@ -598,7 +511,7 @@ function completeAllChallenges(showModal = true) {
   addPoints(50, 3, '歷史全貫通大宗師');
   if (showModal) document.getElementById('challengeCompleteModal').classList.add('show');
 
-  // 成績改由學生截圖證書後，提交本單元專屬 Google Form。
+  // Firebase 設定完成後，學生可從證書頁直接儲存成績；未設定時保留表單備援。
 }
 
 // ==========================================
