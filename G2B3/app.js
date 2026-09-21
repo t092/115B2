@@ -26,7 +26,7 @@ const SCHOOL_AUTH_CONFIG = {
 
 // Google Form 由老師執行 G2B3/gas/CreateScoreForms.js 建立後填入網址。
 const SCORE_FORM_CONFIG = {
-  URL: 'https://docs.google.com/forms/d/e/1FAIpQLSfpEN7ExwsG1kTcaNZDTf2KIFec2tpx7FqqxSSKydm0zzI2tQ/viewform?usp=header',
+  URL: 'https://docs.google.com/forms/d/e/1FAIpQLSe0zZJA3NnwwEWIXOtcmqK1FPD88ScvnIGRrfVVY-SWnebdmg/viewform?usp=header',
   ENTRIES: {className: '', seat: '', name: '', score: '', time: '', badges: ''}
 };
 window.SCORE_FORM_CONFIG = SCORE_FORM_CONFIG;
