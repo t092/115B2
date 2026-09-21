@@ -27,7 +27,7 @@ const SCHOOL_AUTH_CONFIG = {
 // Google Form 由老師執行 G2B3/gas/CreateScoreForms.js 建立後填入網址。
 const SCORE_FORM_CONFIG = {
   URL: 'https://docs.google.com/forms/d/e/1FAIpQLSe0zZJA3NnwwEWIXOtcmqK1FPD88ScvnIGRrfVVY-SWnebdmg/viewform?usp=header',
-  ENTRIES: {className: '', seat: '', name: '', score: '', time: '', badges: ''}
+  ENTRIES: {className: '', seat: '', name: '', score: ''}
 };
 window.SCORE_FORM_CONFIG = SCORE_FORM_CONFIG;
 
@@ -188,6 +188,18 @@ function printCertificate() {
   }, 1000);
 }
 
+function downloadCertificate() {
+  if (!gameState.challenge.completed) {
+    alert('請先完成全部 5 道挑戰關卡，再下載 PDF 證書！');
+    return;
+  }
+  sounds.click();
+  document.body.classList.add('printing-cert');
+  document.body.classList.remove('printing-handout');
+  window.print();
+  setTimeout(() => document.body.classList.remove('printing-cert'), 1000);
+}
+
 // 頁籤切換
 function goToUnit(targetTabId) {
   if (targetTabId === 'tab-summary' && !gameState.challenge.completed) {
@@ -289,9 +301,7 @@ function openScoreForm() {
     className: document.getElementById('studentClass')?.value || '',
     seat: document.getElementById('studentSeat')?.value || '',
     name: document.getElementById('studentName')?.value || '',
-    score: String(gameState.score),
-    time: formatTimeChinese(gameState.challenge.seconds),
-    badges: Array.from(gameState.badges).join('、') || '完成全課複習'
+    score: String(gameState.score)
   };
   const params = new URLSearchParams();
   Object.keys(values).forEach(key => {

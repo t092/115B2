@@ -38,8 +38,6 @@ function setupScoreForms() {
     var seatItem = addRequiredText(form, '座號');
     var nameItem = addRequiredText(form, '姓名');
     var scoreItem = addRequiredText(form, '分數');
-    var timeItem = addRequiredText(form, '作答時間');
-    var badgesItem = addRequiredText(form, '勳章');
 
     // Apps Script FormApp 目前無法以程式新增檔案上傳題型。
     // 表單建立後，請在 Google Form 編輯器手動新增同名的檔案上傳題。
@@ -69,8 +67,6 @@ function setupScoreForms() {
         seat: seatItem.getId(),
         name: nameItem.getId(),
         score: scoreItem.getId(),
-        time: timeItem.getId(),
-        badges: badgesItem.getId()
       }
     };
     Logger.log(config.unit + '：請手動新增「通關證書截圖」檔案上傳題，並設為必填、最多 1 個檔案。');
@@ -82,6 +78,25 @@ function setupScoreForms() {
 
 function addRequiredText(form, title) {
   return form.addTextItem().setTitle(title).setRequired(true);
+}
+
+// 已經建立的表單可執行一次，移除不再使用的欄位。
+function updateExistingScoreForms() {
+  var formIds = [
+    '1FAIpQLSe0zZJA3NnwwEWIXOtcmqK1FPD88ScvnIGRrfVVY-SWnebdmg',
+    '1FAIpQLSfpEN7ExwsG1kTcaNZDTf2KIFec2tpx7FqqxSSKydm0zzI2tQ'
+  ];
+  formIds.forEach(function(formId) {
+    var form = FormApp.openById(formId);
+    form.getItems().slice().forEach(function(item) {
+      if (item.getTitle && ['作答時間', '勳章'].indexOf(item.getTitle()) !== -1) {
+        form.deleteItem(item);
+      }
+    });
+    form.setCollectEmail(true);
+    Logger.log('已更新表單：' + form.getPublishedUrl());
+    Logger.log('請確認表單內有必填的「通關證書截圖」檔案上傳題。');
+  });
 }
 
 function handleScoreFormSubmit(event) {

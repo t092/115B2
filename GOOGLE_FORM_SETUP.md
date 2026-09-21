@@ -12,6 +12,8 @@
    - 最多 1 個檔案
    - 建議限制為圖片，檔案大小上限 10 MB
 
+若兩份表單已經建立，執行 `updateExistingScoreForms()` 會移除「作答時間」與「勳章」欄位；不會刪除學生既有回覆。表單只保留班級、座號、姓名、總分、已驗證 Email，以及手動新增的通關證書截圖上傳題。
+
 每個遊戲會建立自己的表單與試算表：
 
 - `G2B3`：第一課成績與通關證書
@@ -26,7 +28,7 @@
 - `G2B3/app.js` 的 `SCORE_FORM_CONFIG`
 - `DynaSoKOBAN/cai-service.js` 的 `CAI_CONFIG.SCORE_FORM_URL` 與 `SCORE_FORM_ENTRIES`
 
-`entries` 的數字是 Google Form 題目 ID，前端會用它們預填班級、座號、姓名、分數、作答時間與勳章。學生仍可在送出前檢查並修改資料，老師以證書截圖核對。
+`entries` 的數字是 Google Form 題目 ID，前端會用它們預填班級、座號、姓名與總分。學生仍可在送出前檢查並修改資料，老師以證書截圖核對分數、時間與勳章。
 
 ## 重複提交規則
 

@@ -123,6 +123,19 @@
   .certificate-preview .certificate-score { font-size: 28px; color: #9d5945; font-weight: bold; margin: 8px 0; }
   .certificate-preview p { color: #51463b; font-size: 14px; margin: 4px 0; }
   .certificate-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+  @media print {
+    body.printing-certificate > * { visibility: hidden !important; }
+    body.printing-certificate #modal,
+    body.printing-certificate #modal #dynaCertificate,
+    body.printing-certificate #modal #dynaCertificate * { visibility: visible !important; }
+    body.printing-certificate #modal { position: absolute; inset: 0; background: #fff; }
+    body.printing-certificate #modal .modal-box { max-width: 900px; width: 90%; background: #fff; box-shadow: none; border: none; }
+    body.printing-certificate #modalTitle,
+    body.printing-certificate #modal .small,
+    body.printing-certificate .certificate-actions,
+    body.printing-certificate #dynaCertificate + p { display: none !important; }
+    body.printing-certificate #dynaCertificate { max-width: 760px; margin: 80px auto; padding: 60px 40px; }
+  }
 
   /* 排行榜專用彈窗樣式 */
   .rank-table {
@@ -612,9 +625,7 @@ function openDynaScoreForm(score, timeStr) {
     className: student.classId || '',
     seat: student.seatNo || '',
     name: student.name || '',
-    score,
-    time: timeStr,
-    badges: '朝代順序挑戰完成'
+    score
   });
 }
 
@@ -632,9 +643,16 @@ function showDynaCertificate(score, moves, timeStr) {
     </div>
     <p style="font-size:13px; color:#e0b46a;">請先截圖保存上方證書，再登入 Google Form 填寫分數並上傳截圖。</p>
     <div class="certificate-actions">
+      <button class="btn-sec" onclick="event.stopPropagation(); downloadDynaCertificate();">⬇️ 下載 PDF 證書</button>
       <button class="btn-gold" onclick="event.stopPropagation(); openDynaScoreForm(${score}, '${timeStr}');">📋 填寫成績表單</button>
     </div>
   `);
+}
+
+function downloadDynaCertificate() {
+  document.body.classList.add('printing-certificate');
+  window.print();
+  setTimeout(() => document.body.classList.remove('printing-certificate'), 1000);
 }
 
 function closeModal() {

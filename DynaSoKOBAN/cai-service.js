@@ -8,7 +8,7 @@ const CAI_CONFIG = {
   GAS_API_URL: 'https://script.google.com/macros/s/AKfycbzjetB7qPpquboR0rnMyvWNOQxAi3AbzSPNiVsiEiEnrxvckNH3X1_z4AzSctdJVFbIQQ/exec',
   SCORE_FORM_URL: 'https://docs.google.com/forms/d/e/1FAIpQLSfpEN7ExwsG1kTcaNZDTf2KIFec2tpx7FqqxSSKydm0zzI2tQ/viewform?usp=header',
   SCORE_FORM_ENTRIES: {
-    className: '', seat: '', name: '', score: '', time: '', badges: ''
+    className: '', seat: '', name: '', score: ''
   },
   HOSTED_DOMAIN: 'st.tc.edu.tw',
   UNIT_NAME: 'DynaSoKOBAN',
@@ -25,9 +25,7 @@ const CAI = {
       className: scoreData.className || '',
       seat: scoreData.seat || '',
       name: scoreData.name || '',
-      score: String(scoreData.score ?? ''),
-      time: scoreData.time || '',
-      badges: scoreData.badges || ''
+      score: String(scoreData.score ?? '')
     };
     const params = new URLSearchParams();
     Object.keys(values).forEach(key => {
