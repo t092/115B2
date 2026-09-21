@@ -42,12 +42,8 @@ function setupScoreForms() {
     var timeItem = addRequiredText(form, '作答時間');
     var badgesItem = addRequiredText(form, '勳章');
 
-    var upload = form.addFileUploadItem();
-    upload.setTitle('通關證書截圖');
-    upload.setHelpText('請上傳完整、清楚可辨識的通關證書截圖。');
-    upload.setMaxFiles(1);
-    upload.setMaxFileSize(10);
-    upload.setRequired(true);
+    // Apps Script FormApp 目前無法以程式新增檔案上傳題型。
+    // 表單建立後，請在 Google Form 編輯器手動新增同名的檔案上傳題。
 
     var responseSpreadsheet = SpreadsheetApp.create(config.sheetTitle);
     form.setDestination(FormApp.DestinationType.SPREADSHEET, responseSpreadsheet.getId());
@@ -78,6 +74,7 @@ function setupScoreForms() {
         badges: badgesItem.getId()
       }
     };
+    Logger.log(config.unit + '：請手動新增「通關證書截圖」檔案上傳題，並設為必填、最多 1 個檔案。');
   });
 
   properties.setProperty('SCORE_FORM_REGISTRY', JSON.stringify(registry));

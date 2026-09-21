@@ -6,13 +6,18 @@
 2. 以老師帳號執行 `setupScoreForms()` 一次。
 3. 授權 Forms、Drive、Spreadsheet 與觸發器權限。
 4. 從執行記錄複製 `G2B3` 和 `DynaSoKOBAN` 的 `formUrl` 與 `entries`。
+5. 開啟兩份表單的編輯頁面，手動新增「檔案上傳」題目：
+   - 題目名稱必須是 `通關證書截圖`
+   - 設為必填
+   - 最多 1 個檔案
+   - 建議限制為圖片，檔案大小上限 10 MB
 
 每個遊戲會建立自己的表單與試算表：
 
 - `G2B3`：第一課成績與通關證書
 - `DynaSoKOBAN`：朝代 SOKOBAN 成績與通關證書
 
-學生必須登入 Google Form，表單會收集已驗證的 Google Email，並要求上傳通關證書截圖。
+學生必須登入 Google Form，表單會收集已驗證的 Google Email，並要求上傳通關證書截圖。由於 Apps Script 的 `FormApp` 目前不能程式化新增檔案上傳題型，檔案上傳題需手動新增。
 
 ## 填入前端設定
 
