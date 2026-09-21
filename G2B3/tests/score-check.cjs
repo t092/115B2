@@ -15,7 +15,7 @@ cert.validity.notAfter = new Date(Date.now() + 86400000);
 cert.setSubject([{name:'commonName',value:'test'}]); cert.setIssuer(cert.subject.attributes);
 cert.sign(forge.pki.privateKeyFromPem(keys.privateKey.export({type:'pkcs8',format:'pem'})), forge.md.sha256.create());
 const pem = forge.pki.certificateToPem(cert);
-const audience = '985010177875-fg8ipntq0tva6sjdph6geokhh5spf9ll.apps.googleusercontent.com';
+const audience = '403500919614-4c109l85fn6hul7nng2nskbs9kn4reis.apps.googleusercontent.com';
 function token(overrides = {}, header = {}) {
   const claims = {aud:audience,iss:'https://accounts.google.com',exp:Math.floor(Date.now()/1000)+3600,
     iat:Math.floor(Date.now()/1000),sub:'student-1',email:'student@st.tc.edu.tw',email_verified:true,hd:'st.tc.edu.tw',...overrides};

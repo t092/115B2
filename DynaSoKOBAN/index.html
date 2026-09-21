@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中國朝代 SOKOBAN · 學習作業</title>
+<script src="cai-service.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: #2a2420;
+    color: #eee9df;
+    font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  h1 {
+    margin-top: 36px; font-size: 38px; letter-spacing: 8px;
+    color: #e8ddc9; text-shadow: 0 4px 24px rgba(0,0,0,.6);
+    opacity: 0; animation: fadeDown 1s ease .2s forwards;
+    z-index: 10;
+  }
+  .sub {
+    margin-top: 8px; font-size: 15px; color: #b9a98c; letter-spacing: 4px;
+    opacity: 0; animation: fadeDown 1s ease .5s forwards;
+    z-index: 10; display: flex; align-items: center; gap: 8px;
+  }
+  .sub-tag {
+    background: #9d5945; color: #fff; font-size: 12px; padding: 2px 8px;
+    border-radius: 4px; letter-spacing: 1px; font-weight: bold;
+  }
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  #stage {
+    position: relative; flex: 1; width: 100%;
+    max-width: 1200px; overflow: hidden;
+  }
+  .dyn-block {
+    position: absolute; min-width: 76px; height: 56px;
+    padding: 6px 14px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; white-space: nowrap;
+    box-shadow: 0 5px 0 rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.45);
+  }
+  #startWrap {
+    position: absolute; top: 52%; left: 50%; z-index: 20;
+    transform: translate(-50%, -50%) scale(.92);
+    opacity: 0; transition: opacity .7s ease, transform .7s ease;
+    pointer-events: none; text-align: center;
+    background: rgba(36, 30, 26, 0.88);
+    backdrop-filter: blur(8px);
+    border: 1px solid #54483a;
+    padding: 30px 48px; border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+    min-width: 360px; max-width: 90vw;
+  }
+  #startWrap.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+  
+  .auth-section { margin-bottom: 20px; }
+  .user-card {
+    background: rgba(60, 52, 44, 0.7);
+    border: 1px solid #7a6b57;
+    border-radius: 10px; padding: 12px 20px;
+    margin-bottom: 18px; display: inline-flex;
+    align-items: center; gap: 14px;
+  }
+  .user-name { font-size: 16px; font-weight: bold; color: #e0b46a; }
+  .guest-badge { background: #5b718b; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px; }
+  
+  #startBtn {
+    display: inline-block; text-decoration: none;
+    background: #9d5945; color: #fff;
+    font-size: 26px; letter-spacing: 8px; font-weight: bold;
+    padding: 16px 54px 16px 62px; border-radius: 12px;
+    box-shadow: 0 6px 0 #6f3d30, 0 14px 34px rgba(0,0,0,.5);
+    transition: transform .15s, box-shadow .15s, background .15s;
+    animation: glow 1.6s ease-in-out infinite alternate;
+  }
+  #startBtn:hover { background: #b06a52; transform: translateY(-2px); }
+  #startBtn:active { transform: translateY(3px); box-shadow: 0 2px 0 #6f3d30; }
+  
+  .sec-btn {
+    margin-top: 14px; font-size: 13px; color: #b9a98c; letter-spacing: 2px;
+    background: rgba(255,255,255,0.06); border: 1px solid #54483a;
+    border-radius: 6px; padding: 7px 16px; cursor: pointer;
+    font-family: inherit; transition: all .2s;
+  }
+  .sec-btn:hover { background: rgba(255,255,255,0.14); color: #eee9df; }
+  
+  .notice-text { font-size: 12px; color: #8d7f6a; margin-top: 12px; line-height: 1.5; }
+  
+  @keyframes glow {
+    from { box-shadow: 0 6px 0 #6f3d30, 0 0 12px rgba(224,180,106,.25); }
+    to { box-shadow: 0 6px 0 #6f3d30, 0 0 34px rgba(224,180,106,.55); }
+  }
+
+  /* 班級座號綁定 Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(18, 14, 12, 0.78);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-box {
+    background: #2a2420; border: 2px solid #8d7a58;
+    border-radius: 14px; padding: 28px 36px; text-align: center;
+    box-shadow: 0 16px 40px rgba(0,0,0,.7); max-width: 380px; width: 90%;
+  }
+  .modal-box h3 { color: #e0b46a; letter-spacing: 2px; margin-bottom: 8px; font-size: 20px; }
+  .modal-box p { font-size: 14px; color: #b9a98c; margin-bottom: 18px; }
+  .input-row { display: flex; gap: 12px; margin-bottom: 20px; justify-content: center; }
+  .input-group { text-align: left; }
+  .input-group label { display: block; font-size: 12px; color: #8d7f6a; margin-bottom: 4px; }
+  .input-group input {
+    background: #1c1815; border: 1px solid #54483a; border-radius: 6px;
+    padding: 8px 12px; color: #fff; font-size: 16px; width: 100px; text-align: center;
+    outline: none;
+  }
+  .input-group input:focus { border-color: #e0b46a; }
+  .confirm-btn {
+    background: #9d5945; color: #fff; border: none; border-radius: 6px;
+    padding: 10px 24px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%;
+  }
+  .confirm-btn:hover { background: #b06a52; }
+</style>
+</head>
+<body>
+  <h1>中國朝代 SOKOBAN</h1>
+  <div class="sub">
+    <span class="sub-tag">學習作業</span>
+    <span>朝代順序大挑戰 · 動手排好五千年</span>
+  </div>
+  
+  <div id="stage"></div>
+
+  <div id="startWrap">
+    <!-- 未登入畫面 -->
+     <div id="loginSection" class="auth-section">
+       <p style="font-size:15px; color:#e0cfA8; letter-spacing:2px; margin-bottom:14px; font-weight:bold;">免登入開始學習作業</p>
+       <div id="googleBtnContainer" style="display:flex; justify-content:center; margin-bottom:12px;"></div>
+       <div>
+         <button id="guestBtn" class="sec-btn" onclick="handleGuestMode()">🎮 開始作業（完成後填寫成績表單）</button>
+       </div>
+       <p class="notice-text">※ 完成遊戲後請截圖通關證書，登入 Google Form 上傳證書並填寫成績。</p>
+    </div>
+
+    <!-- 已登入/體驗狀態畫面 -->
+    <div id="userSection" class="auth-section" style="display:none;">
+      <div class="user-card">
+        <span id="userBadge" class="user-name">👤 載入中...</span>
+        <button class="sec-btn" style="margin:0; padding:4px 10px; font-size:12px;" onclick="handleLogout()">登出</button>
+      </div>
+      <div>
+        <a id="startBtn" href="dynasty-push-game.html">開始作業</a>
+      </div>
+      <div style="margin-top:14px;">
+        <button class="sec-btn" onclick="playIntro()">↻ 再播一次開場</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 學生首次確認班級座號彈窗 -->
+  <div id="classSeatModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3>確認學籍資料</h3>
+      <p id="modalStudentName">同學您好，請填寫班級與座號以記錄成績：</p>
+      <div class="input-row">
+        <div class="input-group">
+          <label for="inputClass">班級 (如 702)</label>
+          <input id="inputClass" type="text" maxlength="4" placeholder="702">
+        </div>
+        <div class="input-group">
+          <label for="inputSeat">座號 (如 05)</label>
+          <input id="inputSeat" type="text" maxlength="2" placeholder="05">
+        </div>
+      </div>
+      <button class="confirm-btn" onclick="confirmClassSeat()">完成進入作業</button>
+    </div>
+  </div>
+
+<script>
+const DYNASTIES = [
+  ['夏', '#9d5945'], ['商', '#6c4e46'],
+  ['西周', '#b07b4d'], ['東周', '#8d6a4a'],
+  ['春秋', '#5b718b'], ['戰國', '#9b493d'],
+  ['秦', '#303a3b'], ['西漢', '#8d4b4b'],
+  ['新', '#6f6258'], ['東漢', '#8d4b4b'],
+  ['三國', '#617b78'], ['西晉', '#536c6a'],
+  ['東晉', '#617b78'], ['五胡十六國', '#77644f'],
+  ['南北朝', '#617b78'], ['隋', '#a8784b'],
+  ['唐', '#a34e3f'], ['五代十國', '#62645d'],
+  ['遼', '#7a6a8a'], ['北宋', '#5b718b'],
+  ['西夏', '#7d8471'], ['金', '#8a6d3b'],
+  ['南宋', '#6d8297'], ['元', '#80644c'],
+  ['明', '#9b493d'], ['清', '#334e50'],
+  ['中華民國', '#4a6b8a'],
+];
+
+const stage = document.getElementById('stage');
+const startWrap = document.getElementById('startWrap');
+let pendingGooglePayload = null;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function playIntro() {
+  stage.innerHTML = '';
+  startWrap.classList.remove('show');
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const cols = 9, rows = 3;
+  const cells = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) cells.push({ r, c });
+  }
+  const picks = shuffle(cells);
+  const order = shuffle(DYNASTIES);
+  let maxDelay = 0;
+
+  order.forEach(([name, color], i) => {
+    const el = document.createElement('div');
+    el.className = 'dyn-block';
+    el.textContent = name;
+    el.style.background = color;
+
+    const cell = picks[i];
+    const cellW = (W - 40) / cols, cellH = (H - 30) / rows;
+    stage.appendChild(el);
+    const bw = el.offsetWidth, bh = el.offsetHeight;
+    const fx = 20 + cell.c * cellW + Math.random() * Math.max(cellW - bw - 6, 0);
+    const fy = 10 + cell.r * cellH + Math.random() * Math.max(cellH - bh - 6, 0);
+    const tilt = (Math.random() - 0.5) * 10;
+
+    el.style.left = fx + 'px';
+    el.style.top = fy + 'px';
+
+    const delay = 150 + i * 55;
+    maxDelay = Math.max(maxDelay, delay);
+    el.animate(
+      [
+        { transform: `translate(${-fx - 200}px, ${H - fy + 160}px) rotate(${-540 - Math.random() * 360}deg)`, opacity: 0 },
+        { opacity: 1, offset: 0.25 },
+        { transform: `translate(0, 0) rotate(${tilt}deg)`, opacity: 1 }
+      ],
+      { duration: 950, delay, easing: 'cubic-bezier(.2,.8,.25,1)', fill: 'backwards' }
+    );
+  });
+
+  setTimeout(() => {
+    startWrap.classList.add('show');
+    renderAuthUI();
+  }, maxDelay + 600);
+}
+
+// 渲染登入或使用者卡片狀態
+function renderAuthUI() {
+  const student = CAI.getStudent();
+  const loginSec = document.getElementById('loginSection');
+  const userSec = document.getElementById('userSection');
+  const userBadge = document.getElementById('userBadge');
+  const startBtn = document.getElementById('startBtn');
+
+  if (student) {
+    loginSec.style.display = 'none';
+    userSec.style.display = 'block';
+    if (student.isGuest) {
+      userBadge.innerHTML = '👤 免登入作業模式 <span class="guest-badge">完成後填寫表單</span>';
+      startBtn.textContent = '開始作業';
+    } else if (student.isTeacher) {
+      userBadge.textContent = '👤 教師測試模式';
+      startBtn.textContent = '開始作業';
+    } else {
+      userBadge.textContent = `👤 ${student.classId} 班 ${student.seatNo} 號 ${student.name}`;
+      startBtn.textContent = '開始作業';
+    }
+  } else {
+    loginSec.style.display = 'block';
+    userSec.style.display = 'none';
+  }
+}
+
+// 初始化 Google 登入按鈕
+function initGoogleLoginButton() {
+  if (window.location.protocol === 'file:') {
+    document.getElementById('googleBtnContainer').textContent = '直接開啟本機檔案時請使用免登入體驗；學校登入請用正式網站或已授權的 localhost。';
+    return;
+  }
+  if (!window.google || !google.accounts || !google.accounts.id) {
+    setTimeout(initGoogleLoginButton, 300);
+    return;
+  }
+  const container = document.getElementById('googleBtnContainer');
+  if (!container || container.childElementCount > 0) return;
+
+  google.accounts.id.initialize({
+    client_id: CAI_CONFIG.CLIENT_ID,
+    callback: handleGoogleCredentialResponse,
+    hd: CAI_CONFIG.HOSTED_DOMAIN,
+    auto_select: false
+  });
+
+  google.accounts.id.renderButton(container, {
+    theme: 'filled_blue',
+    size: 'large',
+    shape: 'pill',
+    text: 'signin_with',
+    width: 260
+  });
+}
+
+// 接收 Google 登入憑證回傳
+function handleGoogleCredentialResponse(response) {
+  const payload = CAI.decodeJwt(response.credential);
+  if (!payload || !payload.email) {
+    alert('登入驗證失敗，請重試');
+    return;
+  }
+
+  if (payload.email.split('@')[1] !== CAI_CONFIG.HOSTED_DOMAIN || payload.hd !== CAI_CONFIG.HOSTED_DOMAIN) {
+    alert('請使用學校 @' + CAI_CONFIG.HOSTED_DOMAIN + ' 帳號登入');
+    return;
+  }
+  // 一般學生：跳出班級座號確認彈窗
+  pendingGooglePayload = {...payload, idToken: response.credential};
+  document.getElementById('modalStudentName').textContent = `${payload.name || '同學'} 您好，請輸入班級與座號：`;
+  document.getElementById('classSeatModal').classList.remove('hidden');
+}
+
+// 學生確認班級座號
+function confirmClassSeat() {
+  const c = document.getElementById('inputClass').value.trim();
+  const s = document.getElementById('inputSeat').value.trim();
+  if (!c || !s) {
+    alert('請完整填寫班級與座號！');
+    return;
+  }
+  if (!pendingGooglePayload) return;
+
+  CAI.setStudent({
+    email: pendingGooglePayload.email,
+    idToken: pendingGooglePayload.idToken,
+    name: pendingGooglePayload.name || '學生',
+    classId: c,
+    seatNo: s,
+    isTeacher: false
+  });
+
+  document.getElementById('classSeatModal').classList.add('hidden');
+  pendingGooglePayload = null;
+  renderAuthUI();
+}
+
+// 免登入體驗試玩
+function handleGuestMode() {
+  CAI.setGuestMode();
+  renderAuthUI();
+}
+
+// 登出
+function handleLogout() {
+  CAI.logout();
+  renderAuthUI();
+}
+
+playIntro();
+</script>
+</body>
+</html>

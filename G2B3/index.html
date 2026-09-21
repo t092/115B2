@@ -8,8 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <!-- Google Identity Services (GIS) 學生帳號登入 SDK -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <!-- 音效靜音控制 -->
@@ -569,11 +567,11 @@
 
             <p class="result-evaluation" id="finalEvaluation">思維清晰敏捷，從古典封建、郡縣集權到歷代選才演進皆已融會貫通！</p>
 
-            <!-- 雲端試算表成績登錄狀態 -->
-            <div id="cloudSyncStatusBox" class="cloud-sync-status-box">
-              <span id="cloudSyncIcon" class="cloud-sync-icon">☁️</span>
-              <span id="cloudSyncText" role="status" aria-live="polite">正在確認成績登錄結果...</span>
-            </div>
+             <!-- Google Form 成績登錄提示 -->
+             <div id="cloudSyncStatusBox" class="cloud-sync-status-box">
+               <span id="cloudSyncIcon" class="cloud-sync-icon">📷</span>
+               <span id="cloudSyncText" role="status" aria-live="polite">請先截圖保存證書，再填寫成績登錄表。</span>
+             </div>
 
             <div class="modal-actions-row">
               <button class="primary-btn gold-bg big-btn" onclick="goToUnit('tab-summary')">
@@ -632,14 +630,13 @@
           </div>
         </div>
 
-        <div id="certCloudSyncPill" class="cloud-sync-status-box" style="max-width: 600px; margin: 18px auto 0;">
-          <span id="certCloudSyncIcon" class="cloud-sync-icon">☁️</span>
-          <span id="certCloudSyncText" role="status" aria-live="polite">成績雲端登錄：準備中</span>
-        </div>
-        <div style="text-align: center; margin: 12px;">
-          <button type="button" onclick="startFullChallenge()">重新登入學校帳號</button>
-          <button type="button" onclick="uploadScoreToGAS()">重試上傳</button>
-        </div>
+         <div id="certCloudSyncPill" class="cloud-sync-status-box" style="max-width: 600px; margin: 18px auto 0;">
+           <span id="certCloudSyncIcon" class="cloud-sync-icon">📷</span>
+           <span id="certCloudSyncText" role="status" aria-live="polite">請截圖這張證書，並上傳至 Google 成績表單。</span>
+         </div>
+         <div style="text-align: center; margin: 12px;">
+           <button type="button" onclick="openScoreForm()">📋 填寫成績登錄表</button>
+         </div>
 
         <div class="summary-actions">
           <button class="primary-btn big-btn" onclick="printCertificate()">🖨️ 列印作業成果證書</button>
@@ -656,25 +653,21 @@
           <h3>建立學習檔案與成就證書資料</h3>
         </div>
         <div class="modal-body">
-          <!-- 學校帳號身分認證卡片 -->
-          <div class="school-auth-card">
+           <!-- Google Form 登錄說明 -->
+           <div class="school-auth-card">
             <div class="auth-card-header">
               <span class="auth-icon">🏫</span>
               <div>
-                <strong class="auth-title">學生帳號雲端認證</strong>
-                <span class="auth-desc">（限定 @st.tc.edu.tw）</span>
-              </div>
-            </div>
-            <p class="auth-subtext">完成挑戰後，成績將自動登錄至老師的 Google 成績試算表！</p>
-            
-            <div id="googleSignInContainer" class="google-signin-wrapper">
-              <!-- Google 官方 Sign-In 按鈕將渲染在此 -->
-            </div>
+                 <strong class="auth-title">通關證書與成績登錄</strong>
+                 <span class="auth-desc">（使用 Google Form）</span>
+               </div>
+             </div>
+             <p class="auth-subtext">完成挑戰並查看證書後，請截圖證書，再填寫表單並上傳圖片。表單會以 Google 驗證 Email。</p>
 
-            <div id="authStatusBox" class="auth-status-box pending">
-              <span class="auth-status-icon">⚠️</span>
-              <span id="authStatusText">請點擊上方按鈕，以學校 Google 帳號完成認證</span>
-            </div>
+             <div id="authStatusBox" class="auth-status-box pending">
+               <span class="auth-status-icon">📷</span>
+               <span id="authStatusText">請先完成班級、座號與姓名資料，通關後再提交證書。</span>
+             </div>
           </div>
 
           <form id="studentRegistrationForm" onsubmit="handleRegistrationSubmit(event)">

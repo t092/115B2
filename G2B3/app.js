@@ -14,8 +14,8 @@
 // 日後各單元只需改 UNIT_NAME，試算表會全自動建立該單元頁籤！
 // ==========================================
 const SCHOOL_AUTH_CONFIG = {
-  // Google OAuth 2.0 用戶端 ID (已綁定 t092.github.io 與 localhost)
-  CLIENT_ID: '985010177875-fg8ipntq0tva6sjdph6geokhh5spf9ll.apps.googleusercontent.com',
+  // Google OAuth 2.0 用戶端 ID；網站與 localhost 來源須在此用戶端設定中授權。
+  CLIENT_ID: '403500919614-4c109l85fn6hul7nng2nskbs9kn4reis.apps.googleusercontent.com',
   // Google Apps Script 萬能多頁籤成績接收 Web App 網址
   GAS_URL: 'https://script.google.com/macros/s/AKfycbzjetB7qPpquboR0rnMyvWNOQxAi3AbzSPNiVsiEiEnrxvckNH3X1_z4AzSctdJVFbIQQ/exec',
   // 本教學單元名稱（試算表以此名稱自動新增或記錄分頁）
@@ -23,6 +23,13 @@ const SCHOOL_AUTH_CONFIG = {
   // 限定學生學校帳號網域
   REQUIRED_DOMAIN: 'st.tc.edu.tw'
 };
+
+// Google Form 由老師執行 G2B3/gas/CreateScoreForms.js 建立後填入網址。
+const SCORE_FORM_CONFIG = {
+  URL: '',
+  ENTRIES: {className: '', seat: '', name: '', score: '', time: '', badges: ''}
+};
+window.SCORE_FORM_CONFIG = SCORE_FORM_CONFIG;
 
 // ==========================================
 // 1. Web Audio API 音效引擎 (即開即響，無依賴)
@@ -273,6 +280,29 @@ function renderGoogleLoginButton() {
   }
 }
 
+function openScoreForm() {
+  if (!SCORE_FORM_CONFIG.URL) {
+    alert('成績登錄表尚未設定，請稍後再試或通知老師。');
+    return;
+  }
+  const values = {
+    className: document.getElementById('studentClass')?.value || '',
+    seat: document.getElementById('studentSeat')?.value || '',
+    name: document.getElementById('studentName')?.value || '',
+    score: String(gameState.score),
+    time: formatTimeChinese(gameState.challenge.seconds),
+    badges: Array.from(gameState.badges).join('、') || '完成全課複習'
+  };
+  const params = new URLSearchParams();
+  Object.keys(values).forEach(key => {
+    const entry = SCORE_FORM_CONFIG.ENTRIES[key];
+    if (entry && values[key]) params.set(`entry.${entry}`, values[key]);
+  });
+  const separator = SCORE_FORM_CONFIG.URL.includes('?') ? '&' : '?';
+  const url = params.toString() ? `${SCORE_FORM_CONFIG.URL}${separator}${params}` : SCORE_FORM_CONFIG.URL;
+  window.open(url, '_blank', 'noopener');
+}
+
 function parseJwt(token) {
   try {
     const base64Url = token.split('.')[1];
@@ -459,13 +489,6 @@ function handleRegistrationSubmit(e) {
     return;
   }
 
-  // 檢查在正式網頁環境（https://t092.github.io 或 http 伺服器）下是否已完成學校認證
-  const isWebProtocol = window.location.protocol.startsWith('http');
-  if (isWebProtocol && !gameState.student.authenticated) {
-    const confirmProceed = confirm('您尚未登入學校 Google 帳號。\n可以先練習並取得證書；完成登入後才能上傳成績。\n\n是否繼續練習？');
-    if (!confirmProceed) return;
-  }
-
   gameState.student.class = regClass;
   gameState.student.seat = regSeat;
   gameState.student.name = regName;
@@ -479,7 +502,6 @@ function handleRegistrationSubmit(e) {
 
   if (gameState.challenge.completed) {
     goToUnit('tab-summary');
-    uploadScoreToGAS();
     return;
   }
 
@@ -566,8 +588,7 @@ function completeAllChallenges(showModal = true) {
   addPoints(50, 3, '歷史全貫通大宗師');
   if (showModal) document.getElementById('challengeCompleteModal').classList.add('show');
 
-  // 自動同步登錄成績至 Google 試算表對應單元頁籤
-  uploadScoreToGAS();
+  // 成績改由學生截圖證書後，提交本單元專屬 Google Form。
 }
 
 // ==========================================
@@ -1288,5 +1309,4 @@ window.addEventListener('DOMContentLoaded', () => {
   initQuizGame();
   initDetectiveGame();
   updateCertificate();
-  initGoogleAuth();
 });

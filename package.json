@@ -4,7 +4,8 @@
   "scripts": {
     "build:maze": "node G2B3/tools/build-maze.cjs",
     "build:auth": "node G2B3/tools/build-auth.cjs",
-    "test": "node --test G2B3/tests/score-check.cjs",
+    "test:dynasty-browser": "node DynaSoKOBAN/tests/login-browser.cjs",
+    "test": "node --test G2B3/tests/score-check.cjs DynaSoKOBAN/tests/integration.cjs",
     "test:browser": "node G2B3/tests/score-browser.cjs && node G2B3/tests/detective-check.cjs && node G2B3/tests/maze-check.cjs"
   },
   "devDependencies": {

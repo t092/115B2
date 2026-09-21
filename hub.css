@@ -228,6 +228,17 @@ h1, h2, h3, .zone-title, .card-title, .hub-subtitle, .soon-badge,
   font-size: 0.98rem;
 }
 
+.open-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  align-items: stretch;
+}
+
+.open-grid .cai-card {
+  height: 100%;
+}
+
 /* ================= 卡片共通 ================= */
 .cai-card {
   position: relative;
@@ -254,6 +265,58 @@ h1, h2, h3, .zone-title, .card-title, .hub-subtitle, .soon-badge,
 .cai-card.featured:hover {
   transform: rotate(0deg) translateY(-6px);
   box-shadow: 8px 12px 0 rgba(70, 64, 92, 0.9);
+}
+
+.dynasty-card {
+  background:
+    radial-gradient(circle at 88% 12%, rgba(224, 180, 106, 0.22), transparent 34%),
+    linear-gradient(135deg, #322923 0%, #211b18 100%);
+  border-color: #8d7a58;
+  color: #eee9df;
+  transform: rotate(0.6deg);
+  animation-delay: 0.28s;
+}
+
+.dynasty-card:hover {
+  transform: rotate(0deg) translateY(-6px);
+  box-shadow: 8px 12px 0 rgba(42, 36, 32, 0.82);
+}
+
+.dynasty-card .featured-emoji {
+  background: #9d5945;
+  border-color: #e0b46a;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45);
+}
+
+.dynasty-card .card-title {
+  color: #f4e7cc;
+}
+
+.dynasty-card .card-desc {
+  color: #c7bba8;
+}
+
+.dynasty-card .chapter-number {
+  background: #e0b46a;
+  color: #2a2420;
+  border-color: #2a2420;
+}
+
+.dynasty-card .pill-item {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #9d5945;
+  color: #eee9df;
+}
+
+.dynasty-enter {
+  background: #9d5945;
+  border-color: #e0b46a;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45);
+}
+
+.dynasty-enter:hover {
+  background: #e0b46a;
+  color: #2a2420;
 }
 
 .ribbon {
@@ -496,6 +559,7 @@ h1, h2, h3, .zone-title, .card-title, .hub-subtitle, .soon-badge,
 @media (max-width: 768px) {
   .hub-header { padding-top: 40px; }
   .cai-card { padding: 22px; }
+  .open-grid { grid-template-columns: 1fr; gap: 24px; }
   .featured-emoji { width: 84px; height: 84px; font-size: 2.6rem; }
   .ribbon { top: 12px; right: -10px; font-size: 0.82rem; padding: 5px 14px 5px 18px; }
   .zone-hint { margin-left: 0; }

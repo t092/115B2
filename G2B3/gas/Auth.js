@@ -1,5 +1,5 @@
 var AUTH_CONFIG = {
-  clientId: '985010177875-fg8ipntq0tva6sjdph6geokhh5spf9ll.apps.googleusercontent.com',
+  clientId: '403500919614-4c109l85fn6hul7nng2nskbs9kn4reis.apps.googleusercontent.com',
   domain: 'st.tc.edu.tw',
   unit: '二上第1課_商周至隋唐的國家與社會'
 };

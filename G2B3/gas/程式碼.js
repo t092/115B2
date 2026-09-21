@@ -38,6 +38,7 @@ function doPost(e) {
     }
 
     var identity = verifyStudentToken(data.idToken);
+    if (data.unitName === 'DynaSoKOBAN') return Dynasty.submit(data, identity);
     var email = identity.email.trim().toLowerCase();
     if (data.unitName !== AUTH_CONFIG.unit) throw new Error('不支援的教學單元');
     if (!/^[a-f0-9-]{36}$/i.test(data.submissionId || '')) throw new Error('缺少有效的作業識別碼');
@@ -117,6 +118,7 @@ function doPost(e) {
 }
 
 function doGet(e) {
+  if (e && e.parameter && e.parameter.unitName === 'DynaSoKOBAN') return Dynasty.get(e);
   return ContentService.createTextOutput(JSON.stringify({
     status: 'online',
     message: '國中歷史數位互動作業 - 萬能多單元成績接收 API 正常運行中！'
