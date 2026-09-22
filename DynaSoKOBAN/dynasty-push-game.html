@@ -2,6 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>朝代關卡遊戲 · 學習作業</title>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -159,8 +160,10 @@
   .rank-table tr:nth-child(3) td:first-child { color: #e67e22; font-weight: bold; }
   .rank-badge { font-size: 15px; }
 </style>
+<link rel="stylesheet" href="dynasty-theme.css">
 </head>
 <body>
+  <div class="eyebrow">THE DYNASTY ARCHIVE · 時序藏書室</div>
   <h1>中國朝代 SOKOBAN</h1>
   <div id="subtitle" class="sub">第一關 · 大分期推積木：夏商 ＋ 周到隋唐 ＋ 宋元 ＋ 明清 ＋ 中華民國</div>
 
@@ -181,15 +184,27 @@
         <option value="6">隱藏關</option>
       </select>
     </label>
-    <button id="soundToggle" onclick="toggleSound()">音效：開</button>
+  </div>
+
+  <div class="board-viewport" tabindex="0" aria-label="朝代推方塊棋盤，小螢幕可左右捲動">
+    <div id="board"></div>
+  </div>
+  <div class="board-legend" aria-label="棋盤圖例"><span><i class="legend-chip"></i>可推銘牌</span><span><i class="legend-chip goal"></i>目標位置</span><span><i class="legend-chip fixed"></i>固定提示</span></div>
+  <div id="msg" role="status"></div>
+  <div class="help">方向鍵／WASD 或下方方向按鈕移動；積木只能推、不能拉。<br>觸控螢幕可拖曳棋盤查看其他區域。</div>
+  <div class="touch-controls" aria-label="移動控制">
+    <button aria-label="向上" onclick="ensureMusic();tryMove(-1,0)">↑</button>
+    <button aria-label="向左" onclick="ensureMusic();tryMove(0,-1)">←</button>
+    <button aria-label="向下" onclick="ensureMusic();tryMove(1,0)">↓</button>
+    <button aria-label="向右" onclick="ensureMusic();tryMove(0,1)">→</button>
+  </div>
+  <div class="game-tools">
+    <button id="soundToggle" class="btn-sec" onclick="toggleSound()">音效：開</button>
     <button id="musicToggle" onclick="toggleMusic()">音樂：開</button>
     <button class="btn-gold" onclick="openLeaderboardModal()">🏆 排行榜</button>
     <button class="btn-sec" onclick="exitToHome()">回首頁</button>
   </div>
 
-  <div id="board"></div>
-  <div id="msg"></div>
-  <div class="help">方向鍵／WASD 移動；積木只能推、不能拉。</div>
   <div id="confetti" class="confetti"></div>
   <audio id="bgm" src="Shift_and_Slide.mp3" loop preload="auto" autoplay volume="0.15"></audio>
 
@@ -614,6 +629,8 @@ const FINAL_SPAWN_CELLS = [
 
 let levelNumber = 1;
 let level, blocks, player, moves, won;
+let facing = 0, spriteFrame = 0, spriteTimer;
+let visualMove = null;
 const LEVEL_SCORES = { 1: 10, 2: 15, 3: 20, 4: 25, 5: 30 };
 let totalScore = 0;
 let levelScore = LEVEL_SCORES[1];
@@ -644,6 +661,8 @@ function updateHud() {
 }
 
 function loadLevel() {
+  clearTimeout(spriteTimer);
+  facing = 0; spriteFrame = 0; visualMove = null;
   level = buildLevel();
   const blockSet = levelNumber === 5
     ? FINAL_BLOCKS
@@ -842,6 +861,8 @@ async function gameOverModal() {
 
 function tryMove(dr, dc) {
   if (won) return;
+  if (!document.getElementById('modal').classList.contains('hidden') || !document.getElementById('leaderboardModal').classList.contains('hidden')) return;
+  facing = dr < 0 ? 3 : dr > 0 ? 0 : dc < 0 ? 1 : 2;
   const nr = player.r + dr, nc = player.c + dc;
   if (isWallCell(nr, nc)) { sfxBlocked(); return; }
   const b = blockAt(nr, nc);
@@ -857,8 +878,16 @@ function tryMove(dr, dc) {
   }
   player.r = nr; player.c = nc;
   moves++;
+  spriteFrame = b ? 3 + moves % 2 : 1 + moves % 2;
+  visualMove = {dr, dc, block: b};
+  clearTimeout(spriteTimer);
   checkWin();
   render();
+  spriteTimer = setTimeout(() => {
+    spriteFrame = 0;
+    const sprite = document.querySelector('.scholar');
+    if (sprite) sprite.style.backgroundPosition = `0% ${facing * 100 / 3}%`;
+  }, 160);
   if (won) showWinEffects();
 }
 
@@ -977,18 +1006,45 @@ function render() {
       }
       const b = blockAt(r, c);
       if (b) {
-        div.className = 'cell ' + b.cls;
+        div.className = 'cell block ' + b.cls;
         if (isTarget(b, b.r, b.c)) div.classList.add('done');
         if (won && isTarget(b, b.r, b.c)) div.classList.add('celebrate');
         div.textContent = b.name;
       }
       if (player.r === r && player.c === c) {
-        div.className = 'cell player'; div.textContent = '🤖';
+        div.classList.add('player');
+        div.setAttribute('aria-label', '小書吏' + (div.classList.contains('target') ? '，位於目標格' : ''));
+        const sprite = document.createElement('span');
+        sprite.className = 'scholar';
+        sprite.setAttribute('aria-hidden', 'true');
+        sprite.style.backgroundPosition = `${spriteFrame * 25}% ${facing * 100 / 3}%`;
+        div.appendChild(sprite);
       }
       board.appendChild(div);
+      if (visualMove && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const actor = div.querySelector('.scholar');
+        if (actor || (b && b === visualMove.block)) {
+          const dx = -visualMove.dc * (parseInt(board.style.getPropertyValue('--cell-size')) + 4);
+          const dy = -visualMove.dr * (div.offsetHeight + 4);
+          (actor || div).animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'translate(0,0)' }], { duration: 120, easing: 'ease-out' });
+        }
+      }
     }
   }
   document.getElementById('moves').textContent = moves;
+  visualMove = null;
+  if (window.matchMedia('(any-pointer: coarse), (max-width: 700px)').matches) {
+    const viewport = document.querySelector('.board-viewport');
+    const actor = board.querySelector('.player');
+    if (viewport && actor) {
+      const area = viewport.getBoundingClientRect(), rect = actor.getBoundingClientRect();
+      const margin = 12;
+      if (rect.left < area.left + margin) viewport.scrollLeft += rect.left - area.left - margin;
+      else if (rect.right > area.right - margin) viewport.scrollLeft += rect.right - area.right + margin;
+      if (rect.top < area.top + margin) viewport.scrollTop += rect.top - area.top - margin;
+      else if (rect.bottom > area.bottom - margin) viewport.scrollTop += rect.bottom - area.bottom + margin;
+    }
+  }
 }
 
 function celebrate() {

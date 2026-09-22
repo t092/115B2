@@ -63,13 +63,16 @@
   .hidden { display: none !important; }
   @media (max-width: 520px) { body { padding: 15px 8px; } #board { gap: 3px; padding: 7px; } .hud { padding: 8px; font-size: 12px; } .hud b { font-size: 18px; } }
 </style>
+<link rel="stylesheet" href="dynasty-theme.css">
 </head>
-<body>
+<body class="archive-night">
 <main class="page">
+  <div class="eyebrow">THE SECRET COLLECTION · 夜讀藏書閣</div>
   <h1>朝代連號消消樂</h1>
   <div id="studentName" class="subtitle"></div>
 
   <section id="intro" class="intro">
+    <div class="archive-mark" aria-hidden="true">藏</div>
     <h2>隱藏關挑戰</h2>
     <p>交換相鄰方塊，讓三個連續朝代排成橫線或直線即可消除。</p>
     <p>也可以先選取方塊，再用方向鍵上下左右交換位置。</p>
@@ -84,8 +87,17 @@
       <span>得分 <b id="score">0</b> / 150</span>
       <span>連鎖 <b id="combo">0</b></span>
     </div>
+    <div class="time-track" id="timeTrack" role="progressbar" aria-label="剩餘時間" aria-valuemin="0" aria-valuemax="60" aria-valuenow="60"><span id="timeFill"></span></div>
     <div id="board" aria-label="朝代消消樂棋盤"></div>
+    <p class="help">點選兩個相鄰銘牌，或在銘牌上向交換方向滑動。</p>
     <div id="message" class="message" aria-live="polite"></div>
+  </section>
+
+  <section id="result" class="result hidden" aria-live="polite">
+    <div id="rewardCup" class="reward-cup" aria-hidden="true"></div>
+    <h2 id="resultTitle"></h2>
+    <p id="resultSummary"></p>
+    <button id="returnResult">查看本次總成績</button>
   </section>
 
   <section id="locked" class="locked hidden">
@@ -101,12 +113,11 @@ const SIZE = 8;
 const TIME_LIMIT = 60;
 const REWARD_SCORE = 150;
 const DYNASTIES = ['商', '周', '秦', '漢', '三國', '晉', '南北朝', '隋', '唐', '五代', '宋', '元', '明', '清'];
-const COLORS = ['#a85d42', '#b27a4d', '#4e6c82', '#9b493d', '#617b78', '#536c6a', '#80644c', '#a8784b', '#a34e3f', '#62645d', '#5b718b', '#80644c', '#9b493d', '#334e50'];
+const COLORS = ['#87603c', '#856a45', '#50697b', '#914f43', '#4b6d68', '#44685e', '#725c49', '#87643d', '#895148', '#62645d', '#50697b', '#725c49', '#914f43', '#44685e'];
 const student = CAI.getStudent();
 let tiles = [];
 let selected = null;
 let pointerStart = null;
-let suppressClick = false;
 let score = 0;
 let combo = 0;
 let timeLeft = TIME_LIMIT;
@@ -157,11 +168,19 @@ function render() {
     tile.setAttribute('aria-label', `${DYNASTIES[value]}，第 ${index + 1} 格`);
     if (selected === index) tile.classList.add('selected');
     tile.addEventListener('pointerdown', event => {
-      pointerStart = { index, x: event.clientX, y: event.clientY };
+      if (finished || busy || !event.isPrimary || event.button !== 0 || pointerStart) return;
+      pointerStart = { index, x: event.clientX, y: event.clientY, id: event.pointerId };
       tile.setPointerCapture?.(event.pointerId);
     });
     tile.addEventListener('pointerup', finishPointer);
-    tile.addEventListener('click', () => selectTile(index));
+    tile.addEventListener('pointercancel', event => {
+      if (pointerStart?.id === event.pointerId) pointerStart = null;
+    });
+    tile.addEventListener('lostpointercapture', event => {
+      if (pointerStart?.id === event.pointerId) pointerStart = null;
+    });
+    // Pointer taps are handled on release. Only keyboard/assistive clicks remain.
+    tile.addEventListener('click', event => { if (event.detail === 0) selectTile(index); });
     board.appendChild(tile);
   });
 }
@@ -171,19 +190,22 @@ function adjacent(a, b) {
 }
 
 function finishPointer(event) {
-  if (!pointerStart) return;
+  if (!pointerStart || pointerStart.id !== event.pointerId) return;
   const start = pointerStart; pointerStart = null;
-  if (Math.hypot(event.clientX - start.x, event.clientY - start.y) < 8) return;
-  const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.tile');
-  const targetIndex = target ? Number(target.dataset.index) : -1;
-  if (targetIndex >= 0 && adjacent(start.index, targetIndex)) {
+  if (finished || busy) return;
+  const dx = event.clientX - start.x, dy = event.clientY - start.y;
+  const bounds = document.getElementById('board').getBoundingClientRect();
+  if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) return;
+  if (Math.hypot(dx, dy) < 14) { selectTile(start.index); return; }
+  const horizontal = Math.abs(dx) >= Math.abs(dy);
+  const targetIndex = start.index + (horizontal ? Math.sign(dx) : Math.sign(dy) * SIZE);
+  if (targetIndex >= 0 && targetIndex < SIZE * SIZE && adjacent(start.index, targetIndex)) {
     selected = null; swap(start.index, targetIndex); render();
   }
-  suppressClick = true; setTimeout(() => { suppressClick = false; }, 0);
 }
 
 function selectTile(index) {
-  if (suppressClick || finished || busy) return;
+  if (finished || busy) return;
   if (selected === null) selected = index;
   else if (selected === index) selected = null;
   else if (adjacent(selected, index)) { const first = selected; selected = null; swap(first, index); }
@@ -219,8 +241,24 @@ function fillTiles() {
 }
 
 function removeMatches() {
+  if (finished) return false;
   const matches = findMatches();
   if (!matches.size) { combo = 0; return false; }
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    matches.forEach(index => {
+      const source = document.querySelector(`.tile[data-index="${index}"]`);
+      if (!source) return;
+      const rect = source.getBoundingClientRect();
+      const ghost = source.cloneNode(true);
+      ghost.removeAttribute('data-index');
+      ghost.classList.remove('selected');
+      ghost.classList.add('clearing');
+      ghost.disabled = true; ghost.setAttribute('aria-hidden', 'true');
+      Object.assign(ghost.style, { position:'fixed', left:`${rect.left}px`, top:`${rect.top}px`, width:`${rect.width}px`, height:`${rect.height}px`, pointerEvents:'none', zIndex:'5' });
+      document.body.appendChild(ghost);
+      setTimeout(() => ghost.remove(), 230);
+    });
+  }
   combo++;
   score += matches.size * 10 + combo * 10;
   matches.forEach(index => { tiles[index] = null; });
@@ -231,9 +269,11 @@ function removeMatches() {
 
 function settleBoard(selectionAfterSwap) {
   setTimeout(() => {
+    if (finished) return;
     collapseTiles();
     render();
     setTimeout(() => {
+      if (finished) return;
       fillTiles();
       if (selectionAfterSwap !== null) selected = selectionAfterSwap;
       render();
@@ -266,7 +306,10 @@ function updateHud() {
   document.getElementById('time').textContent = timeLeft;
   document.getElementById('score').textContent = score;
   document.getElementById('combo').textContent = combo;
-  document.getElementById('time').classList.toggle('urgent', timeLeft <= 5);
+  document.getElementById('time').classList.toggle('urgent', timeLeft <= 10);
+  document.getElementById('timeTrack').classList.toggle('urgent', timeLeft <= 10);
+  document.getElementById('timeTrack').setAttribute('aria-valuenow', timeLeft);
+  document.getElementById('timeFill').style.width = `${timeLeft / TIME_LIMIT * 100}%`;
 }
 
 function finish() {
@@ -276,17 +319,23 @@ function finish() {
   document.getElementById('message').innerHTML = reward
     ? '<strong>🧋 恭喜！達成 150 分奶茶獎勵！</strong>'
     : `挑戰結束，這次得分 ${score} 分，未達 150 分。`;
-  setTimeout(() => {
-    alert(reward ? '恭喜達成奶茶獎勵！' : `挑戰結束：${score} 分`);
     sessionStorage.setItem('CAI_DYNA_HIDDEN_RESULT', JSON.stringify({
       score,
       completed: reward,
       durationSeconds: TIME_LIMIT - timeLeft,
       reward: reward ? 'milk_tea' : ''
     }));
-    location.href = 'dynasty-push-game.html?hiddenResult=1';
-  }, 350);
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('result').classList.remove('hidden');
+  document.getElementById('rewardCup').classList.toggle('hidden', !reward);
+  document.getElementById('resultTitle').textContent = reward ? '藏書修復完成！' : '夜讀挑戰完成';
+  document.getElementById('resultSummary').textContent = reward ? `本次 ${score} 分，已達成奶茶獎勵！` : `本次 ${score} 分，距離奶茶獎勵還差 ${REWARD_SCORE - score} 分。`;
+  document.getElementById('returnResult').focus();
 }
+
+document.getElementById('returnResult').addEventListener('click', () => {
+  location.href = 'dynasty-push-game.html?hiddenResult=1';
+});
 
 function start() {
   document.getElementById('intro').classList.add('hidden');
