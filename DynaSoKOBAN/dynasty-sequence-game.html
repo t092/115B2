@@ -278,7 +278,13 @@ function finish() {
     : `挑戰結束，這次得分 ${score} 分，未達 150 分。`;
   setTimeout(() => {
     alert(reward ? '恭喜達成奶茶獎勵！' : `挑戰結束：${score} 分`);
-    location.href = 'index.html';
+    sessionStorage.setItem('CAI_DYNA_HIDDEN_RESULT', JSON.stringify({
+      score,
+      completed: reward,
+      durationSeconds: TIME_LIMIT - timeLeft,
+      reward: reward ? 'milk_tea' : ''
+    }));
+    location.href = 'dynasty-push-game.html?hiddenResult=1';
   }, 350);
 }
 

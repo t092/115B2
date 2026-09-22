@@ -135,21 +135,32 @@
 
       const clientSubmissionId = data.clientSubmissionId || crypto.randomUUID();
       const submissionId = `${user.uid}_${data.unitId}_${clientSubmissionId}`;
+      const score = Number(data.score ?? data.totalScore ?? 0);
+      const baseScore = Number(data.baseScore ?? score);
+      const bonusScore = Number(data.bonusScore ?? 0);
+      const totalScore = baseScore + bonusScore;
       const payload = {
         uid: user.uid,
         class: profile.classId,
         seat: profile.seatNo,
         email: profile.email,
         unitName: data.unitId,
-        totalScore: Number(data.score || 0),
+        totalScore,
         name: profile.name,
-        score: Number(data.score || 0),
+        score: totalScore,
+        baseScore,
+        bonusScore,
+        hiddenLevelUnlocked: data.hiddenLevelUnlocked === true,
+        hiddenLevelCompleted: data.hiddenLevelCompleted === true,
+        hiddenLevelScore: Number(data.hiddenLevelScore ?? bonusScore),
+        hiddenLevelDurationSeconds: Number(data.hiddenLevelDurationSeconds ?? 0),
+        hiddenReward: data.hiddenReward || '',
         stars: Number(data.stars || 0),
         durationSeconds: Number(data.durationSeconds || 0),
         moves: Number(data.moves || 0),
         badges: Array.isArray(data.badges) ? data.badges : [],
         levelDetails: Array.isArray(data.levelDetails) ? data.levelDetails : [],
-        completed: data.completed === true,
+        completed: data.completed === true || data.isCompleted === true,
         identityStatus: 'self_declared',
         assignmentId: data.assignmentId || '',
         clientSubmissionId,

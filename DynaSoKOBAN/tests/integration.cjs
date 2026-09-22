@@ -43,6 +43,17 @@ test('client submits dynasty scores through Firebase without Google authenticati
   assert.equal((await api.submitScore({totalScore:10})).status,'success');
   assert.equal(firebaseCalls.find(call=>call.type==='submit').data.profile.classId,'201');
   assert.equal(firebaseCalls.find(call=>call.type==='submit').data.isGuest,false);
+  await api.submitScore({
+    totalScore:250,baseScore:100,bonusScore:150,hiddenLevelUnlocked:true,
+    hiddenLevelCompleted:true,hiddenLevelScore:162,hiddenLevelDurationSeconds:48,
+    hiddenReward:'milk_tea',clientSubmissionId:'dyna-test-submission'
+  });
+  const bonusSubmission=firebaseCalls.filter(call=>call.type==='submit').at(-1).data;
+  assert.deepEqual(
+    Object.fromEntries(['totalScore','baseScore','bonusScore','hiddenLevelCompleted','hiddenLevelScore','hiddenReward','clientSubmissionId']
+      .map(key=>[key,bonusSubmission[key]])),
+    {totalScore:250,baseScore:100,bonusScore:150,hiddenLevelCompleted:true,hiddenLevelScore:162,hiddenReward:'milk_tea',clientSubmissionId:'dyna-test-submission'}
+  );
   await api.getLeaderboard('201');
   api.logout();assert.equal(api.getStudent(),null);
 });

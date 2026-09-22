@@ -11,7 +11,15 @@ const CAI_CONFIG = {
 const CAI = {
   openScoreForm(scoreData) {
     return this.submitScore({
-      totalScore: scoreData.score,
+      totalScore: scoreData.totalScore ?? scoreData.score,
+      baseScore: scoreData.baseScore,
+      bonusScore: scoreData.bonusScore,
+      hiddenLevelUnlocked: scoreData.hiddenLevelUnlocked,
+      hiddenLevelCompleted: scoreData.hiddenLevelCompleted,
+      hiddenLevelScore: scoreData.hiddenLevelScore,
+      hiddenLevelDurationSeconds: scoreData.hiddenLevelDurationSeconds,
+      hiddenReward: scoreData.hiddenReward,
+      clientSubmissionId: scoreData.clientSubmissionId,
       moves: scoreData.moves || 0,
       durationSeconds: scoreData.durationSeconds || 0,
       maxLevel: scoreData.maxLevel || 5,
@@ -147,11 +155,20 @@ const CAI = {
           email: student.email,
           registered: student.registered === true
         },
-        score: scoreData.totalScore,
+        score: scoreData.totalScore ?? scoreData.score,
+        totalScore: scoreData.totalScore ?? scoreData.score,
+        baseScore: scoreData.baseScore,
+        bonusScore: scoreData.bonusScore,
+        hiddenLevelUnlocked: scoreData.hiddenLevelUnlocked,
+        hiddenLevelCompleted: scoreData.hiddenLevelCompleted,
+        hiddenLevelScore: scoreData.hiddenLevelScore,
+        hiddenLevelDurationSeconds: scoreData.hiddenLevelDurationSeconds,
+        hiddenReward: scoreData.hiddenReward,
+        clientSubmissionId: scoreData.clientSubmissionId,
         moves: scoreData.moves,
         durationSeconds: scoreData.durationSeconds,
         levelDetails: scoreData.levelDetails,
-        completed: scoreData.isCompleted,
+        completed: scoreData.isCompleted === true || scoreData.completed === true,
         isGuest: false
       });
     }

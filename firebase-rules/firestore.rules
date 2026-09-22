@@ -16,9 +16,25 @@ service cloud.firestore {
           'DynaSoKOBAN'
         ]
         && request.resource.data.status == 'pending_review'
+        && request.resource.data.baseScore is int
+        && request.resource.data.baseScore >= 0
+        && request.resource.data.baseScore <= 1000
+        && request.resource.data.bonusScore is int
+        && request.resource.data.bonusScore >= 0
+        && request.resource.data.bonusScore <= 150
+        && (request.resource.data.bonusScore == 0 || request.resource.data.hiddenLevelCompleted == true)
         && request.resource.data.totalScore is int
         && request.resource.data.totalScore >= 0
         && request.resource.data.totalScore <= 1000
+        && request.resource.data.totalScore == request.resource.data.baseScore + request.resource.data.bonusScore
+        && request.resource.data.hiddenLevelUnlocked is bool
+        && request.resource.data.hiddenLevelCompleted is bool
+        && (!request.resource.data.hiddenLevelCompleted || request.resource.data.hiddenLevelUnlocked)
+        && request.resource.data.hiddenLevelScore is int
+        && request.resource.data.hiddenLevelScore >= 0
+        && request.resource.data.hiddenLevelScore <= 1000
+        && request.resource.data.hiddenLevelDurationSeconds is int
+        && request.resource.data.hiddenLevelDurationSeconds >= 0
         && request.resource.data['class'] is string
         && request.resource.data['seat'] is string
         && request.resource.data.name is string

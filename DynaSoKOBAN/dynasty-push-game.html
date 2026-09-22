@@ -225,6 +225,129 @@ if (!currentStudent) {
   currentStudent = CAI.setGuestMode();
 }
 let lastScoreSubmission = null;
+const PENDING_COMPLETION_KEY = 'CAI_DYNA_PENDING_COMPLETION';
+const HIDDEN_RESULT_KEY = 'CAI_DYNA_HIDDEN_RESULT';
+
+function createSubmissionId() {
+  return window.crypto?.randomUUID?.()
+    || `dyna-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function savePendingCompletion() {
+  const pending = {
+    baseScore: totalScore,
+    baseMoves: totalMovesAllLevels,
+    durationSeconds: Math.round((Date.now() - gameStartTime) / 1000),
+    levelDetails: levelDetailsLog,
+    clientSubmissionId: createSubmissionId(),
+    hiddenLevelUnlocked: true
+  };
+  sessionStorage.setItem(PENDING_COMPLETION_KEY, JSON.stringify(pending));
+  return pending;
+}
+
+function getPendingCompletion() {
+  try {
+    const raw = sessionStorage.getItem(PENDING_COMPLETION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function getHiddenResult() {
+  try {
+    const raw = sessionStorage.getItem(HIDDEN_RESULT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function clearPendingCompletion() {
+  sessionStorage.removeItem(PENDING_COMPLETION_KEY);
+  sessionStorage.removeItem(HIDDEN_RESULT_KEY);
+}
+
+function formatDuration(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}分${seconds % 60}秒`;
+}
+
+async function submitDynaCompletion(pending, hiddenResult = null) {
+  const hiddenAttemptScore = Number(hiddenResult?.score || 0);
+  const bonusScore = hiddenResult?.completed ? 150 : 0;
+  const totalScoreWithBonus = pending.baseScore + bonusScore;
+  lastScoreSubmission = {
+    totalScore: totalScoreWithBonus,
+    baseScore: pending.baseScore,
+    bonusScore,
+    hiddenLevelUnlocked: pending.hiddenLevelUnlocked === true,
+    hiddenLevelCompleted: hiddenResult?.completed === true,
+    hiddenLevelScore: hiddenAttemptScore,
+    hiddenLevelDurationSeconds: Number(hiddenResult?.durationSeconds || 0),
+    hiddenReward: hiddenResult?.reward || '',
+    moves: pending.baseMoves,
+    durationSeconds: pending.durationSeconds + Number(hiddenResult?.durationSeconds || 0),
+    maxLevel: 5,
+    isCompleted: true,
+    levelDetails: pending.levelDetails.concat(hiddenResult ? [{
+      level: 6,
+      type: 'hidden',
+      score: hiddenAttemptScore,
+      bonusScore,
+      completed: hiddenResult.completed === true,
+      durationSeconds: Number(hiddenResult.durationSeconds || 0)
+    }] : []),
+    clientSubmissionId: pending.clientSubmissionId
+  };
+
+  const submissionResult = currentStudent.isGuest
+    ? { status: 'guest', message: '純體驗模式不記錄成績' }
+    : await CAI.submitScore(lastScoreSubmission);
+  if (submissionResult.status === 'success') clearPendingCompletion();
+  return submissionResult;
+}
+
+async function resumeHiddenCompletion() {
+  if (new URLSearchParams(window.location.search).get('hiddenResult') !== '1') return;
+  const pending = getPendingCompletion();
+  const hiddenResult = getHiddenResult();
+  if (!pending || !hiddenResult) return;
+
+  const submissionResult = await submitDynaCompletion(pending, hiddenResult);
+  const bonusScore = hiddenResult.completed ? 150 : 0;
+  const totalScoreWithBonus = pending.baseScore + bonusScore;
+  showDynaCertificate(
+    totalScoreWithBonus,
+    pending.baseMoves,
+    formatDuration(pending.durationSeconds + Number(hiddenResult.durationSeconds || 0)),
+    submissionResult,
+    { baseScore: pending.baseScore, bonusScore }
+  );
+}
+
+async function submitPendingBaseOnly() {
+  const pending = getPendingCompletion();
+  if (!pending) return;
+  const submissionResult = await submitDynaCompletion(pending);
+  showDynaCertificate(
+    pending.baseScore,
+    pending.baseMoves,
+    formatDuration(pending.durationSeconds),
+    submissionResult,
+    { baseScore: pending.baseScore, bonusScore: 0 }
+  );
+}
+
+function recoverPendingCompletion() {
+  if (currentStudent.isGuest || getPendingCompletion() === null) return;
+  showModal('📌 尚有一筆成績未送出', `
+    <p>上次完成第 5 關後尚未完成隱藏關結算。</p>
+    <p>可以先送出一般關卡成績，隱藏關獎勵將不計入本次成績。</p>
+    <button class="btn-gold" onclick="event.stopPropagation(); submitPendingBaseOnly();">送出一般成績</button>
+  `);
+}
 
 function updateStudentHud() {
   const badge = document.getElementById('hudStudentBadge');
@@ -635,7 +758,7 @@ async function retryDynaScore() {
   if (node) node.textContent = status;
 }
 
-function showDynaCertificate(score, moves, timeStr, submissionResult) {
+function showDynaCertificate(score, moves, timeStr, submissionResult, breakdown = {}) {
   const student = CAI.getStudent() || {};
   const submitted = submissionResult && submissionResult.status === 'success';
   const statusText = submitted
@@ -647,6 +770,7 @@ function showDynaCertificate(score, moves, timeStr, submissionResult) {
       <p>通關學習成就證書</p>
       <p>${student.name || '歷史探險家'}｜${student.classId || '班級未填'}班 ${student.seatNo || '座號未填'}號</p>
       <div class="certificate-score">${score} 分</div>
+      ${Number.isFinite(breakdown.baseScore) ? `<p>一般關卡：${breakdown.baseScore} 分　隱藏關獎勵：${breakdown.bonusScore || 0} 分</p>` : ''}
       <p>總步數：${moves} 步</p>
       <p>總耗時：${timeStr}</p>
       <p>勳章：朝代順序挑戰完成</p>
@@ -769,6 +893,7 @@ async function checkWin() {
 
     if (levelNumber === 5) {
       if (levelScore === LEVEL_SCORES[5] && !currentStudent.isGuest) {
+        savePendingCompletion();
         pendingAction = 'hidden-intro';
         showModal('🔓 發現隱藏關！', `
           <p>第 5 關滿分通關，取得本次遊戲的隱藏關資格。</p>
@@ -779,22 +904,19 @@ async function checkWin() {
       }
       pendingAction = 'complete';
       const duration = Math.round((Date.now() - gameStartTime) / 1000);
-      const minutes = Math.floor(duration / 60);
-      const seconds = duration % 60;
-      const timeStr = `${minutes}分${seconds}秒`;
-
-      lastScoreSubmission = {
-        totalScore,
-        moves: totalMovesAllLevels,
+      const pending = {
+        baseScore: totalScore,
+        baseMoves: totalMovesAllLevels,
         durationSeconds: duration,
-        maxLevel: 5,
-        isCompleted: true,
-        levelDetails: levelDetailsLog
+        levelDetails: levelDetailsLog,
+        clientSubmissionId: createSubmissionId(),
+        hiddenLevelUnlocked: false
       };
-      const submissionResult = currentStudent.isGuest
-        ? {status: 'guest', message: '純體驗模式不記錄成績'}
-        : await CAI.submitScore(lastScoreSubmission);
-      showDynaCertificate(totalScore, totalMovesAllLevels, timeStr, submissionResult);
+      const submissionResult = await submitDynaCompletion(pending);
+      showDynaCertificate(totalScore, totalMovesAllLevels, formatDuration(duration), submissionResult, {
+        baseScore: totalScore,
+        bonusScore: 0
+      });
     } else {
       pendingAction = 'next';
       let syncText = '';
@@ -955,6 +1077,11 @@ ensureMusic();
 
 // 啟動第一關
 startLevel(1);
+if (new URLSearchParams(window.location.search).get('hiddenResult') === '1') {
+  resumeHiddenCompletion();
+} else {
+  recoverPendingCompletion();
+}
 </script>
 </body>
 </html>
