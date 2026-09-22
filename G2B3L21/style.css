@@ -1,0 +1,559 @@
+/* ===================================================
+   國中歷史二上 第2課〈商周至隋唐的民族與文化〉
+   互動學習網頁 樣式表
+   設計風格：現代國風 + 遊戲化（Wordwall 質感）
+   =================================================== */
+
+:root {
+  --primary: #0e7490;
+  --primary-light: #22a6b3;
+  --primary-dark: #164e63;
+  --accent-gold: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-green: #10b981;
+  --accent-cyan: #06b6d4;
+  --bg-main: #f8fafc;
+  --card-bg: #ffffff;
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: var(--text-dark);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ================= 音效控制 ================= */
+.sound-toggle-btn {
+  position: fixed; top: 18px; right: 18px; z-index: 100;
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 2px solid #cbd5e1; background: white; cursor: pointer;
+  box-shadow: var(--shadow-md); font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .2s, background .2s;
+}
+.sound-toggle-btn:hover { transform: scale(1.1); background: #f8fafc; }
+
+/* ================= 頁首 ================= */
+.app-header {
+  background: linear-gradient(135deg, #0c4a6e 0%, #155e75 55%, #0e7490 100%);
+  color: white; padding: 22px 20px 0;
+  box-shadow: 0 6px 20px rgba(12, 74, 110, 0.25);
+}
+.header-content {
+  max-width: 1200px; margin: 0 auto; display: flex;
+  flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px;
+}
+.brand-badge {
+  background: rgba(245, 158, 11, .25); color: #fef08a;
+  border: 1px solid #f59e0b; padding: 3px 10px; border-radius: 20px;
+  font-size: .8rem; font-weight: 600; display: inline-block; margin-bottom: 6px;
+}
+.main-title { font-size: 1.75rem; font-weight: 900; letter-spacing: .5px; }
+.subtitle { color: #bae6fd; font-size: .95rem; margin-top: 2px; }
+
+.student-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  background: rgba(255, 255, 255, .12); backdrop-filter: blur(10px);
+  padding: 10px 16px; border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, .2);
+}
+.input-group { display: flex; align-items: center; gap: 6px; }
+.input-group label { font-size: .85rem; color: #e0f2fe; }
+.input-group input {
+  padding: 6px 10px; border-radius: var(--radius-sm); border: 1px solid #cbd5e1;
+  font-size: .9rem; font-weight: 600; outline: none; width: 90px;
+}
+#studentName { width: 120px; }
+.score-pill {
+  background: white; color: var(--primary-dark); font-weight: 700;
+  padding: 6px 14px; border-radius: 20px; font-size: .95rem;
+  display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow-sm);
+}
+.score-pill .divider { color: #cbd5e1; }
+
+.nav-tabs { max-width: 1200px; margin: 18px auto 0; display: flex; gap: 8px; flex-wrap: wrap; }
+.tab-btn {
+  border: none; background: rgba(255, 255, 255, .14); color: #e0f2fe;
+  padding: 12px 20px; border-radius: var(--radius-md) var(--radius-md) 0 0;
+  cursor: pointer; font-family: inherit; font-size: .95rem; font-weight: 700;
+  display: flex; align-items: center; gap: 8px; transition: all .2s;
+}
+.tab-btn:hover { background: rgba(255, 255, 255, .26); }
+.tab-btn.active { background: var(--bg-main); color: var(--primary-dark); }
+.tab-btn:disabled, .tab-btn.tab-locked { opacity: .5; cursor: not-allowed; }
+.tab-btn:disabled:hover, .tab-btn.tab-locked:hover { background: rgba(255, 255, 255, .14); }
+.tab-icon { font-size: 1.1rem; }
+
+/* ================= 麵包容器 ================= */
+.main-container { max-width: 1200px; margin: 0 auto; padding: 0 20px 50px; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; animation: fadeIn .35s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ================= 講義 ================= */
+.handout-banner {
+  background: linear-gradient(120deg, #ffffff 0%, #ecfeff 100%);
+  border: 1px solid var(--border-color); border-left: 6px solid var(--primary);
+  border-radius: var(--radius-md); padding: 24px 26px; margin: 26px 0;
+  display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+}
+.handout-banner h2 { font-size: 1.5rem; color: var(--primary-dark); }
+.notice-badge {
+  display: inline-block; background: #fef3c7; color: #b45309;
+  border-radius: 20px; padding: 2px 12px; font-size: .8rem; font-weight: 700; margin: 6px 0;
+}
+.handout-banner p { color: var(--text-muted); font-size: .92rem; max-width: 620px; }
+.print-handout-btn {
+  border: none; background: var(--primary); color: white; padding: 12px 20px;
+  border-radius: var(--radius-sm); cursor: pointer; font-family: inherit;
+  font-weight: 700; font-size: .92rem; box-shadow: var(--shadow-sm); transition: .2s;
+}
+.print-handout-btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
+
+.handout-article {
+  background: var(--card-bg); border-radius: var(--radius-lg);
+  padding: 34px 34px 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);
+}
+.article-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.article-header h3 { font-size: 1.35rem; color: var(--text-dark); }
+.unit-badge {
+  background: var(--primary); color: white; font-size: .75rem; font-weight: 700;
+  padding: 4px 12px; border-radius: 20px; white-space: nowrap;
+}
+.lead-text { color: #334155; font-size: .98rem; margin-bottom: 6px; }
+.lead-text strong { color: var(--primary-dark); }
+
+.lecture-cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.lecture-card {
+  background: #f8fafc; border: 1px solid var(--border-color);
+  border-top: 4px solid var(--primary-light); border-radius: var(--radius-md); padding: 18px 20px;
+}
+.lecture-card.wide { grid-column: 1 / -1; }
+.card-icon { font-size: 1.6rem; }
+.lecture-card h4 { font-size: 1.08rem; margin: 6px 0 10px; color: var(--primary-dark); }
+.lecture-card ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.lecture-card li { position: relative; padding-left: 18px; font-size: .92rem; color: #475569; }
+.lecture-card li::before { content: "▪"; position: absolute; left: 0; color: var(--primary-light); }
+.lecture-card li strong { color: var(--primary-dark); }
+.lecture-card li.tip {
+  background: #fff7ed; border: 1px dashed #fdba74; border-radius: var(--radius-sm);
+  padding: 8px 10px 8px 30px; color: #9a3412;
+}
+.lecture-card li.tip::before { content: "⚠"; left: 10px; color: #ea580c; }
+
+.strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.strategy-card {
+  background: #f1f5f9; border-radius: var(--radius-md); padding: 18px 20px;
+  border-left: 5px solid #94a3b8;
+}
+.strategy-card.accent { border-left-color: var(--accent-gold); background: #fffbeb; }
+.strategy-era { font-size: .78rem; font-weight: 700; color: var(--text-muted); }
+.strategy-card strong { display: block; font-size: 1.25rem; color: var(--primary-dark); margin: 2px 0 6px; }
+.strategy-card p { font-size: .9rem; color: #475569; }
+
+.cause-chain {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  background: #ecfeff; border: 1px solid #a5f3fc; border-radius: var(--radius-md);
+  padding: 16px; margin: 20px 0; font-size: .9rem; font-weight: 600; color: #155e75;
+}
+.cause-chain i { color: var(--accent-gold); font-style: normal; font-weight: 900; }
+
+.compare-table-box { margin-top: 22px; }
+.compare-table-box h4 { font-size: 1.05rem; color: var(--primary-dark); margin-bottom: 12px; }
+.styled-table { width: 100%; border-collapse: collapse; font-size: .88rem; overflow: hidden; border-radius: var(--radius-md); }
+.styled-table th { background: var(--primary-dark); color: white; padding: 11px 14px; text-align: left; font-weight: 700; }
+.styled-table td { padding: 11px 14px; border-bottom: 1px solid var(--border-color); color: #475569; background: #fcfdff; }
+.styled-table tr:nth-child(even) td { background: #f8fafc; }
+.styled-table td strong { color: var(--primary-dark); }
+
+.handout-footer-cta {
+  text-align: center; background: linear-gradient(120deg, #0c4a6e, #0e7490);
+  color: white; border-radius: var(--radius-lg); padding: 34px 24px; margin: 28px 0;
+  box-shadow: var(--shadow-lg);
+}
+.handout-footer-cta h3 { font-size: 1.35rem; margin-bottom: 8px; }
+.handout-footer-cta p { color: #bae6fd; font-size: .92rem; margin-bottom: 20px; }
+
+.primary-btn {
+  border: none; background: var(--primary); color: white; padding: 12px 22px;
+  border-radius: var(--radius-sm); cursor: pointer; font-family: inherit;
+  font-weight: 700; font-size: .95rem; transition: .2s; box-shadow: var(--shadow-sm);
+}
+.primary-btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
+.primary-btn.gold-bg { background: var(--accent-gold); color: #78350f; }
+.primary-btn.gold-bg:hover { background: #d97706; }
+.super-big-btn { font-size: 1.15rem; padding: 16px 40px; border-radius: 40px; background: var(--accent-gold); color: #78350f; }
+.super-big-btn:hover { background: #fbbf24; }
+.secondary-btn {
+  border: 2px solid var(--primary); background: white; color: var(--primary);
+  padding: 11px 20px; border-radius: var(--radius-sm); cursor: pointer;
+  font-family: inherit; font-weight: 700; font-size: .92rem; transition: .2s;
+}
+.secondary-btn:hover { background: var(--primary); color: white; }
+.big-btn { font-size: 1rem; padding: 14px 26px; }
+
+/* ================= 挑戰狀態列 ================= */
+.exercise-statusbar {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between;
+  background: white; border-radius: var(--radius-md); padding: 16px 20px;
+  margin: 26px 0 18px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+}
+.status-col { display: flex; flex-direction: column; min-width: 0; }
+.status-label { font-size: .74rem; color: var(--text-muted); white-space: nowrap; }
+.status-value { font-size: 1.05rem; color: var(--primary-dark); font-weight: 700; white-space: nowrap; }
+.timer-display { color: var(--accent-red); font-variant-numeric: tabular-nums; }
+.back-handout-btn {
+  border: 1px solid var(--border-color); background: #f1f5f9; color: var(--text-dark);
+  padding: 9px 16px; border-radius: var(--radius-sm); cursor: pointer;
+  font-family: inherit; font-weight: 600; font-size: .88rem;
+}
+.back-handout-btn:hover { background: #e2e8f0; }
+
+.stage-stepper { display: flex; align-items: center; margin-bottom: 22px; overflow-x: auto; padding-bottom: 6px; }
+.step-item { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 74px; }
+.step-circle {
+  width: 38px; height: 38px; border-radius: 50%; background: #e2e8f0; color: #94a3b8;
+  display: flex; align-items: center; justify-content: center; font-weight: 900; transition: .3s;
+}
+.step-name { font-size: .76rem; color: var(--text-muted); white-space: nowrap; }
+.step-item.active .step-circle { background: var(--primary); color: white; box-shadow: 0 0 0 5px rgba(14, 116, 144, .18); }
+.step-item.active .step-name { color: var(--primary-dark); font-weight: 700; }
+.step-item.completed .step-circle { background: var(--accent-green); color: white; }
+.step-line { flex: 1; height: 4px; background: #e2e8f0; min-width: 18px; border-radius: 2px; }
+.step-line.passed { background: var(--accent-green); }
+
+/* ================= 關卡通用 ================= */
+.challenge-stage { display: none; }
+.challenge-stage.active { display: block; animation: fadeIn .35s ease; }
+.game-toolbar {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between;
+  background: white; border-radius: var(--radius-md) var(--radius-md) 0 0; padding: 18px 22px;
+  border: 1px solid var(--border-color); border-bottom: none;
+}
+.game-info h3 { font-size: 1.2rem; color: var(--primary-dark); }
+.game-info p { font-size: .88rem; color: var(--text-muted); max-width: 640px; }
+.game-stats { font-size: .9rem; color: var(--primary-dark); font-weight: 700; white-space: nowrap; }
+.game-stats strong { color: var(--accent-red); }
+.feedback-line { text-align: center; font-weight: 700; color: var(--primary-dark); margin-top: 16px; min-height: 24px; }
+
+/* ================= 關卡1：揭曉方塊 ================= */
+.box-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  background: white; border: 1px solid var(--border-color); border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding: 24px;
+}
+.box-item { perspective: 800px; cursor: pointer; }
+.box-inner { position: relative; width: 100%; padding-top: 100%; transition: transform .5s; transform-style: preserve-3d; }
+.box-item.flipped .box-inner { transform: rotateY(180deg); }
+.box-front, .box-back {
+  position: absolute; inset: 0; border-radius: var(--radius-md);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; backface-visibility: hidden; padding: 8px; text-align: center;
+}
+.box-front { background: linear-gradient(135deg, #0e7490, #155e75); color: white; box-shadow: var(--shadow-md); }
+.box-front .box-num { font-size: 1.6rem; font-weight: 900; }
+.box-front .box-label { font-size: .74rem; color: #bae6fd; }
+.box-item:hover .box-front { transform: translateY(-4px); transition: .2s; }
+.box-back { background: #ecfdf5; border: 2px solid var(--accent-green); color: #065f46; transform: rotateY(180deg); }
+.box-back .box-back-icon { font-size: 1.5rem; }
+.box-back .box-back-title { font-size: .82rem; font-weight: 700; }
+.box-back .box-back-status { font-size: .7rem; color: var(--accent-green); font-weight: 700; }
+
+/* ================= 關卡2：時空迷宮 ================= */
+.maze-layout { display: grid; grid-template-columns: minmax(280px, 1.2fr) 1fr; gap: 20px; background: white; border: 1px solid var(--border-color); border-radius: 0 0 var(--radius-md) var(--radius-md); padding: 22px; }
+.maze-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 3px; background: #0c4a6e; padding: 8px; border-radius: var(--radius-sm); }
+.maze-cell { aspect-ratio: 1; background: #e0f2fe; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; }
+.maze-cell.wall { background: #0c4a6e; }
+.maze-cell.player { background: var(--accent-gold); box-shadow: inset 0 0 0 2px #b45309; }
+.maze-cell.gate { background: #fde68a; }
+.maze-cell.gate.solved { background: #bbf7d0; }
+.maze-controls { display: grid; grid-template-columns: repeat(3, 52px); justify-content: center; gap: 6px; margin: 16px auto 0; }
+.maze-controls button { height: 46px; border: 1px solid var(--border-color); background: #f1f5f9; border-radius: var(--radius-sm); cursor: pointer; font-size: 1.1rem; font-weight: 700; }
+.maze-controls button:hover { background: var(--primary); color: white; }
+.maze-controls button:nth-child(1) { grid-column: 2; }
+.maze-controls button:nth-child(2) { grid-column: 1; }
+.maze-controls button:nth-child(3) { grid-column: 2; }
+.maze-controls button:nth-child(4) { grid-column: 3; }
+.maze-tip { text-align: center; font-size: .8rem; color: var(--text-muted); margin-top: 8px; }
+.maze-radar { background: #f8fafc; border-radius: var(--radius-md); padding: 18px; }
+.maze-radar h4 { color: var(--primary-dark); margin-bottom: 12px; }
+.maze-radar ol { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.maze-radar li { display: flex; align-items: center; gap: 10px; background: white; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px 12px; font-size: .86rem; }
+.maze-radar li b { width: 26px; height: 26px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.maze-radar li small { display: block; color: var(--text-muted); font-size: .76rem; }
+.maze-radar li.done { border-color: var(--accent-green); background: #f0fdf4; }
+.maze-radar li.done b { background: var(--accent-green); }
+.maze-message { margin-top: 14px; font-size: .88rem; color: var(--primary-dark); font-weight: 600; }
+
+/* ================= 關卡3：天命轉盤 ================= */
+.wheel-stage { display: grid; grid-template-columns: 420px 1fr; gap: 26px; background: white; border: 1px solid var(--border-color); border-radius: 0 0 var(--radius-md) var(--radius-md); padding: 28px; align-items: center; }
+.wheel-container { position: relative; width: 400px; height: 400px; margin: 0 auto; }
+.wheel-pointer { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; color: var(--accent-red); z-index: 3; }
+#wheelCanvas { width: 400px; height: 400px; }
+.spin-action-btn {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 108px; height: 108px; border-radius: 50%; border: 4px solid white;
+  background: var(--accent-red); color: white; font-family: inherit; font-weight: 900;
+  font-size: 1.05rem; cursor: pointer; box-shadow: var(--shadow-lg); transition: .2s; line-height: 1.25;
+}
+.spin-action-btn:hover { background: #dc2626; transform: translate(-50%, -50%) scale(1.06); }
+.spin-action-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+.wheel-result-card { background: #f8fafc; border-radius: var(--radius-md); padding: 22px; }
+.result-badge { font-size: .78rem; font-weight: 700; color: var(--accent-red); }
+.wheel-result-card h3 { font-size: 1.3rem; color: var(--primary-dark); margin: 4px 0 10px; }
+.wheel-result-card p { color: #475569; font-size: .92rem; margin-bottom: 14px; }
+.hide { display: none !important; }
+
+/* ================= 關卡4：轉生者事件配對 ================= */
+.story-arena { background: white; border: 1px solid var(--border-color); border-radius: 0 0 var(--radius-md) var(--radius-md); padding: 26px; }
+.story-card { max-width: 840px; margin: 0 auto; }
+.story-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.story-era { background: var(--primary); color: white; border-radius: 20px; padding: 4px 16px; font-size: .82rem; font-weight: 700; letter-spacing: 1px; }
+.story-identity { background: #fef3c7; color: #b45309; border-radius: 20px; padding: 4px 16px; font-size: .82rem; font-weight: 700; }
+.story-text {
+  margin: 18px 0; font-size: 1rem; line-height: 2.05; color: #334155;
+  background: #f8fafc; border-left: 4px solid var(--primary-light);
+  border-radius: var(--radius-sm); padding: 16px 18px;
+}
+.story-question { font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; color: var(--primary-dark); }
+.story-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.story-option {
+  border: 2px solid var(--border-color); background: #fcfdff; border-radius: var(--radius-sm);
+  padding: 14px 16px; cursor: pointer; font-family: inherit; font-size: .92rem;
+  text-align: left; color: var(--text-dark); transition: .18s; font-weight: 600;
+}
+.story-option:hover:not(:disabled) { border-color: var(--primary-light); transform: translateY(-2px); }
+.story-option.correct { background: #d1fae5; border-color: var(--accent-green); }
+.story-option.wrong { background: #fee2e2; border-color: var(--accent-red); }
+.story-option.shake { animation: shake .35s; }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+/* ================= 關卡5：闖關問答 ================= */
+.quiz-arena { background: white; border: 1px solid var(--border-color); border-radius: 0 0 var(--radius-md) var(--radius-md); padding: 26px; }
+.lifelines-bar { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+.lifeline-btn {
+  border: 2px solid var(--primary-light); background: white; color: var(--primary-dark);
+  padding: 9px 16px; border-radius: 30px; cursor: pointer; font-family: inherit;
+  font-weight: 700; font-size: .86rem; transition: .2s;
+}
+.lifeline-btn:hover:not(:disabled) { background: var(--primary); color: white; }
+.lifeline-btn:disabled { opacity: .4; cursor: not-allowed; }
+.quiz-question-card { max-width: 780px; margin: 0 auto; }
+.quiz-meta { margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.era-tag { background: #ecfeff; color: var(--primary-dark); border-radius: 20px; padding: 3px 12px; font-size: .78rem; font-weight: 700; }
+.character-tag { background: #fef3c7; color: #b45309; border-radius: 20px; padding: 3px 12px; font-size: .78rem; font-weight: 700; }
+.quiz-story {
+  background: #f8fafc; border-left: 4px solid var(--primary-light); border-radius: var(--radius-sm);
+  padding: 14px 16px; margin-bottom: 16px; font-size: .95rem; line-height: 1.95; color: #334155;
+}
+.quiz-title { font-size: 1.3rem; line-height: 1.5; margin-bottom: 18px; color: var(--text-dark); }
+.quiz-hint-box { background: #fffbeb; border: 1px dashed #fbbf24; border-radius: var(--radius-sm); padding: 12px 16px; font-size: .88rem; color: #92400e; margin-bottom: 16px; }
+.quiz-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.quiz-option-btn {
+  border: 2px solid var(--border-color); background: #fcfdff; border-radius: var(--radius-sm);
+  padding: 15px 16px; cursor: pointer; font-family: inherit; font-size: .92rem;
+  text-align: left; color: var(--text-dark); transition: .18s; font-weight: 500;
+}
+.quiz-option-btn:hover:not(:disabled) { border-color: var(--primary-light); transform: translateY(-2px); }
+.quiz-option-btn .opt-label { font-weight: 900; color: var(--primary); margin-right: 4px; }
+.quiz-option-btn.correct { background: #d1fae5; border-color: var(--accent-green); }
+.quiz-option-btn.wrong { background: #fee2e2; border-color: var(--accent-red); }
+
+/* ================= 關卡6：歷史偵探（永嘉之禍） ================= */
+.detective-case-wrapper { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; background: white; border: 1px solid var(--border-color); border-radius: 0 0 var(--radius-md) var(--radius-md); padding: 22px; }
+.ancient-scroll { background: #fdf6e3; border: 2px solid #e0cfa9; border-radius: var(--radius-md); padding: 18px; }
+.scroll-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.scroll-stamp { background: var(--accent-red); color: white; border-radius: 6px; padding: 3px 10px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+.scroll-header h3 { font-size: 1.1rem; color: #7c4a1e; }
+.scroll-content { display: flex; flex-direction: column; gap: 10px; }
+.evidence-intro { font-size: .86rem; color: #7c4a1e; margin-bottom: 2px; }
+.evidence-card {
+  border: 2px solid #e0cfa9; background: #fffdf5; border-radius: var(--radius-sm);
+  padding: 12px 14px; cursor: grab; text-align: left; font-family: inherit;
+  display: flex; flex-direction: column; gap: 4px; transition: .15s; touch-action: none;
+}
+.evidence-card:hover { border-color: var(--primary-light); }
+.evidence-card.is-selected { border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(245, 158, 11, .25); }
+.evidence-card.is-dragging { opacity: .35; }
+.evidence-label { font-size: .72rem; font-weight: 700; color: var(--accent-red); }
+.evidence-text { font-size: .9rem; color: #3f3a2e; line-height: 1.7; }
+.evidence-ghost { position: fixed; z-index: 300; pointer-events: none; opacity: .92; transform: rotate(-2deg); }
+.evidence-verdict { margin-top: 6px; font-size: .75rem; font-weight: 700; }
+.verdict-correct { border-color: var(--accent-green) !important; background: #f0fdf4 !important; }
+.verdict-wrong { border-color: var(--accent-red) !important; background: #fef2f2 !important; }
+.verdict-correct .evidence-verdict { color: #047857; }
+.verdict-wrong .evidence-verdict { color: #b91c1c; }
+.detective-log-card { background: #f8fafc; border-radius: var(--radius-md); padding: 18px; }
+.detective-log-card h4 { color: var(--primary-dark); margin-bottom: 8px; }
+.detective-instructions { font-size: .82rem; color: var(--text-muted); margin-bottom: 14px; }
+.verdict-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.verdict-zone { border: 2px dashed var(--border-color); border-radius: var(--radius-md); padding: 12px; min-height: 160px; background: white; transition: .15s; }
+.verdict-zone h5 { font-size: .95rem; color: var(--primary-dark); }
+.verdict-zone p { font-size: .72rem; color: var(--text-muted); margin-bottom: 8px; }
+.verdict-zone[data-verdict="true"].is-over { border-color: var(--accent-green); background: #f0fdf4; }
+.verdict-zone[data-verdict="false"].is-over { border-color: var(--accent-red); background: #fef2f2; }
+.verdict-cards { display: flex; flex-direction: column; gap: 8px; }
+.verdict-cards .evidence-card { cursor: default; }
+#detectiveStatus { margin-top: 14px; font-size: .88rem; font-weight: 600; color: var(--primary-dark); }
+.detective-results { margin-top: 18px; background: white; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px; }
+.detective-results h4 { color: var(--primary-dark); margin-bottom: 10px; font-size: 1.1rem; }
+.detective-results article { border-top: 1px solid var(--border-color); padding: 12px 0; }
+.detective-results h5 { font-size: .9rem; color: var(--accent-red); margin-bottom: 4px; }
+.detective-results p { font-size: .86rem; color: #475569; }
+.detective-results .primary-btn { margin-top: 16px; }
+
+/* ================= 彈窗 ================= */
+.game-modal {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, .6); backdrop-filter: blur(3px);
+  display: none; align-items: center; justify-content: center; padding: 20px; z-index: 200;
+}
+.game-modal.show { display: flex; animation: fadeIn .2s ease; }
+.modal-card {
+  background: white; border-radius: var(--radius-lg); width: 100%; max-width: 560px;
+  max-height: 92vh; overflow-y: auto; box-shadow: var(--shadow-lg);
+}
+.modal-header { background: var(--primary-dark); color: white; padding: 18px 22px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.modal-badge { background: rgba(245, 158, 11, .3); color: #fde68a; border-radius: 20px; padding: 2px 10px; font-size: .74rem; font-weight: 700; }
+.modal-header h3 { font-size: 1.15rem; margin-top: 6px; }
+.modal-body { padding: 22px; }
+.clue-box { display: flex; gap: 12px; align-items: flex-start; background: #ecfeff; border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px; }
+.clue-icon { font-size: 1.5rem; }
+.clue-box p { font-size: .88rem; color: #155e75; }
+.question-prompt { font-size: 1.02rem; font-weight: 700; margin-bottom: 14px; color: var(--text-dark); }
+.options-stack { display: flex; flex-direction: column; gap: 10px; }
+.modal-option-btn {
+  border: 2px solid var(--border-color); background: #fcfdff; border-radius: var(--radius-sm);
+  padding: 13px 16px; cursor: pointer; font-family: inherit; font-size: .92rem;
+  text-align: left; color: var(--text-dark); transition: .18s; font-weight: 600;
+}
+.modal-option-btn:hover:not(:disabled) { border-color: var(--primary-light); background: #f0f9ff; }
+.modal-option-btn.correct { background: #d1fae5; border-color: var(--accent-green); }
+.modal-option-btn.wrong { background: #fee2e2; border-color: var(--accent-red); }
+.feedback-msg { margin-top: 14px; font-size: .9rem; font-weight: 700; min-height: 22px; }
+.feedback-msg.success { color: #047857; }
+.feedback-msg.error { color: #b91c1c; }
+
+.completion-card .modal-header.success-header { background: linear-gradient(135deg, #047857, #10b981); }
+.completion-icon { font-size: 3.4rem; }
+.text-center { text-align: center; }
+.completion-card h4 { font-size: 1.1rem; margin: 10px 0 18px; color: var(--text-dark); }
+.result-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.result-box { background: #f8fafc; border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--border-color); }
+.res-num { display: block; font-size: 1.7rem; font-weight: 900; color: var(--primary-dark); }
+.res-label { font-size: .8rem; color: var(--text-muted); }
+.result-evaluation { font-size: .92rem; color: #475569; margin-bottom: 20px; }
+.modal-actions-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+.form-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.form-row label { font-size: .86rem; font-weight: 700; color: var(--primary-dark); }
+.form-input { padding: 11px 14px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); font-family: inherit; font-size: .95rem; outline: none; }
+.form-input:focus { border-color: var(--primary-light); }
+.auth-subtext { font-size: .88rem; color: var(--text-muted); margin-bottom: 16px; }
+
+/* ================= 證書 ================= */
+.summary-container { padding: 30px 0; }
+.cert-card { background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; }
+.cert-border { border: 3px double var(--accent-gold); margin: 16px; border-radius: var(--radius-md); padding: 34px; position: relative; }
+.cert-stamp {
+  position: absolute; top: 22px; right: 26px; width: 66px; height: 66px; border: 3px solid var(--accent-red);
+  color: var(--accent-red); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: .84rem; transform: rotate(-14deg); opacity: .85;
+}
+.cert-header { text-align: center; margin-bottom: 22px; }
+.cert-header h2 { font-size: 1rem; color: var(--primary); letter-spacing: 2px; }
+.cert-header h1 { font-size: 2rem; color: var(--primary-dark); margin: 4px 0; }
+.cert-subtitle { color: var(--text-muted); font-size: .88rem; }
+.cert-text { text-align: center; font-size: 1rem; line-height: 2; color: #334155; margin-bottom: 24px; }
+.cert-highlight { color: var(--accent-red); font-size: 1.2rem; }
+.cert-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
+.cert-stat-box { background: #f8fafc; border-radius: var(--radius-md); padding: 16px; text-align: center; border: 1px solid var(--border-color); }
+.stat-num { display: block; font-size: 1.5rem; font-weight: 900; color: var(--primary-dark); }
+.stat-label { font-size: .78rem; color: var(--text-muted); }
+.badges-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 22px; }
+.badge-item { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; border-radius: 20px; padding: 5px 14px; font-size: .82rem; font-weight: 700; }
+.cert-footer { border-top: 1px dashed var(--border-color); padding-top: 16px; }
+.cert-sign { display: flex; justify-content: space-between; font-size: .82rem; color: var(--text-muted); }
+.summary-actions { display: flex; gap: 14px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+
+.app-footer { text-align: center; padding: 24px; color: var(--text-muted); font-size: .82rem; }
+
+/* ================= 列印 ================= */
+@media print {
+  body.printing-handout .app-header,
+  body.printing-handout .handout-banner,
+  body.printing-handout .handout-footer-cta,
+  body.printing-handout .app-footer,
+  body.printing-handout .sound-toggle-btn { display: none !important; }
+  body.printing-handout #tab-summary,
+  body.printing-handout #tab-challenge { display: none !important; }
+  body.printing-cert .app-header,
+  body.printing-cert .summary-actions,
+  body.printing-cert .app-footer,
+  body.printing-cert .sound-toggle-btn,
+  body.printing-cert #tab-handout,
+  body.printing-cert #tab-challenge { display: none !important; }
+  .handout-article, .cert-card { box-shadow: none; }
+}
+
+/* ================= 響應式 ================= */
+@media (max-width: 860px) {
+  .main-title { font-size: 1.35rem; }
+  .header-content { flex-direction: column; align-items: flex-start; }
+  .student-bar { width: 100%; }
+  .lecture-cards-grid, .strategy-grid, .quiz-options-grid, .story-options { grid-template-columns: 1fr; }
+  .maze-layout, .wheel-stage, .detective-case-wrapper { grid-template-columns: 1fr; }
+  .box-grid { grid-template-columns: repeat(2, 1fr); }
+  .cert-stats-grid { grid-template-columns: 1fr; }
+  .exercise-statusbar { flex-direction: column; align-items: stretch; }
+  .handout-article { padding: 22px 18px 26px; }
+  .wheel-container, #wheelCanvas { width: 300px; height: 300px; }
+}
+@media (max-width: 520px) {
+  .tab-btn { padding: 10px 12px; font-size: .82rem; }
+  .tab-text { display: none; }
+  .tab-icon { font-size: 1.3rem; }
+  .game-info h3 { font-size: 1.05rem; }
+  .result-summary-grid { grid-template-columns: 1fr; }
+}
+.mage-viewport { position:relative; background:#151c30; border-radius:16px; overflow:hidden; color:#edf4ff; min-height:400px; }
+#mageView { display:block; width:100%; height:auto; min-height:400px; object-fit:cover; }
+.mage-hud { position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between; gap:8px; padding:13px; background:#10192be8; font-size:13px; }
+.mage-hud strong {color:#ffa4b8;}
+.mage-hands {position:absolute;bottom:0;right:14px;display:flex;align-items:end;pointer-events:none;}
+.mage-hands svg {width:105px;height:148px;filter:drop-shadow(0 0 15px #91cfff);}
+.mage-hands span {font-size:12px; background:#e5d9b9;color:#473b50;padding:12px;transform:rotate(-7deg);margin-bottom:20px;}
+#mageNotice {position:absolute;bottom:6px;left:10px;font-size:12px;max-width:45%;}
+#mageOverlay {position:absolute;inset:45px 0 0;background:linear-gradient(145deg,#1c2744f7,#34253ffb);overflow:auto;padding:18px;z-index:3;}
+#mageOverlay[hidden] {display:none;}
+.mage-battle-heading {display:flex;flex-direction:column;gap:3px;color:#f4c983;font-size:14px;}
+.mage-duel {display:flex;justify-content:center;align-items:center;gap:28px;margin:8px 0;}
+.mage-duel figure {margin:0;text-align:center;font-size:11px;color:#c8d7ee;}
+.mage-duel svg {width:75px;height:100px;filter:drop-shadow(0 0 10px #91cdff66);}
+.mage-spell {font-size:14px;line-height:1.7;margin:8px 0 12px;}
+.mage-answers {display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.mage-answers button {font:inherit;font-size:13px;line-height:1.5;padding:10px;text-align:left;color:#f5f1ff;background:#394469;border:1px solid #8895bb;border-radius:9px;cursor:pointer;}
+.mage-answers button:hover,.mage-answers button:focus-visible {background:#52658c;outline:2px solid #f4c983;}
+.mage-answers button:disabled {opacity:.4;cursor:default;}
+.mage-feedback {font-size:13px;line-height:1.6;margin-top:12px;color:#ffd9a3;}
+.mage-result {text-align:center;max-width:440px;margin:20px auto;line-height:1.9;}
+.mage-result svg {width:100px;height:140px;}
+.mage-result strong {font-size:24px;color:#f4c983;}
+.mage-result button {margin:12px 6px;}
+#stageMaze .maze-layout {grid-template-columns:minmax(0,2.4fr) minmax(210px,1fr);}
+#stageMaze .maze-controls {grid-template-columns:repeat(3,64px);}
+@media(max-width:1000px) {#stageMaze .maze-layout {grid-template-columns:1fr;} .mage-viewport,#mageView {min-height:560px;} }
+@media(max-width:520px) {.mage-answers {grid-template-columns:1fr;} .mage-hud {font-size:11px;} #mageOverlay {padding:12px;} .mage-duel {gap:18px;} .mage-hands span {display:none;} }

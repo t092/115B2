@@ -1,0 +1,23 @@
+const {chromium}=require('C:/Users/grifo/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+(async()=>{
+ const browser=await chromium.launch({headless:true});const page=await browser.newPage({viewport:{width:1280,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('file:///'+require('node:path').resolve('G2B3L21/index.html').replaceAll('\\','/'));
+ await page.evaluate(()=>{sounds.enabled=false;goToUnit('tab-challenge');goToStage(2);clearInterval(mage.timer);});
+ assert.equal(await page.evaluate(()=>mage.hp),100);
+ assert.equal(await page.evaluate(()=>mage.enemies.every(e=>magePath(mage,e)?.length>0)),true);
+ await page.screenshot({path:'G2B3L21/tmp/maze-desktop.png'});
+ await page.evaluate(()=>{const e=mage.enemies[0];e.x=3;e.y=1;mageTick();});
+ assert.equal(await page.evaluate(()=>mage.enemies[0].x),2);
+ await page.evaluate(()=>mageTick());assert.equal(await page.evaluate(()=>mage.battle.kind),0);
+ await page.screenshot({path:'G2B3L21/tmp/maze-battle.png'});
+ await page.evaluate(()=>{let e=mage.battle;mageAnswer(e.answer,document.createElement('button'));document.getElementById('mageContinue').click();for(const target of mage.enemies.filter(e=>!e.solved)){mageStartBattle(target);mageAnswer(target.answer,document.createElement('button'));document.getElementById('mageContinue').click();}});
+ assert.equal(await page.evaluate(()=>mage.ended),true);const base=await page.evaluate(()=>gameState.score);
+ await page.locator('#mageNext').click();assert.equal(await page.evaluate(()=>gameState.score),base+100);
+ await page.evaluate(()=>document.getElementById('mageNext').click());assert.equal(await page.evaluate(()=>gameState.score),base+100);
+ await page.evaluate(()=>{initMazeGame();clearInterval(mage.timer);goToStage(2);mageStartBattle(mage.enemies[0]);for(let i=0;i<5;i++)mageAnswer(0,document.createElement('button'));});
+ assert.equal(await page.evaluate(()=>mage.hp),0);await page.locator('#mageRetry').click();assert.equal(await page.evaluate(()=>mage.hp),100);assert.equal(await page.evaluate(()=>mage.ended),false);
+ await page.setViewportSize({width:390,height:844});await page.evaluate(()=>{clearInterval(mage.timer);mageStartBattle(mage.enemies[1]);});await page.screenshot({path:'G2B3L21/tmp/maze-mobile.png',fullPage:true});
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ assert.deepEqual(errors,[]);console.log('PASS: connected maze, two-cell pursuit/contact, battle, 100-point settlement, no duplicate score, defeat/retry, mobile overflow, no browser errors');await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

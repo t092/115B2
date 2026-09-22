@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商周至隋唐的民族與文化｜歷史互動學習站</title>
+  <meta name="description" content="國中歷史第二課：商周至隋唐的民族與文化。課文重點講義與六道互動關卡，邊讀邊玩學會民族互動與文化融合。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 音效控制 -->
+  <button id="soundToggleBtn" class="sound-toggle-btn" title="切換音效"><span id="soundIcon">🔊</span></button>
+
+  <!-- 頁首 -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="brand">
+        <span class="brand-badge">國中歷史二上 第2課</span>
+        <h1 class="main-title">🧭 商周至隋唐的民族與文化</h1>
+        <p class="subtitle">課本重點講義 ✕ 六道歷史闖關</p>
+      </div>
+      <div class="student-bar">
+        <div class="input-group">
+          <label for="studentClass">班級</label>
+          <input type="text" id="studentClass" placeholder="如 201" value="201">
+        </div>
+        <div class="input-group">
+          <label for="studentSeat">座號</label>
+          <input type="number" id="studentSeat" placeholder="座號" value="1">
+        </div>
+        <div class="input-group">
+          <label for="studentName">姓名</label>
+          <input type="text" id="studentName" placeholder="請輸入姓名" value="歷史探險家">
+        </div>
+        <div class="score-pill">
+          <span class="star-icon">⭐</span><span id="totalStars">0</span> 星
+          <span class="divider">|</span>
+          <span class="coin-icon">🪙</span><span id="totalScore">0</span> 分
+        </div>
+      </div>
+    </div>
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-handout" id="tabBtnHandout"><span class="tab-icon">📖</span><span class="tab-text">課文重點講義</span></button>
+      <button class="tab-btn tab-locked" data-tab="tab-summary" id="tabBtnSummary" disabled aria-disabled="true"><span class="tab-icon">🔒</span><span class="tab-text">學習成就與證書</span></button>
+    </nav>
+  </header>
+
+  <main class="main-container">
+
+    <!-- ==================== 頁籤 1：課文重點講義 ==================== -->
+    <section id="tab-handout" class="tab-pane active">
+      <div class="handout-banner">
+        <div class="handout-banner-text">
+          <h2>📚 課文重點講義</h2>
+          <div class="notice-badge">⚠️ 請先讀完再挑戰</div>
+          <p>從長城、絲路、人口南遷到北魏漢化與唐代交流，跟著時間順序讀懂民族互動這條主線。</p>
+        </div>
+        <div class="handout-banner-actions">
+          <button class="print-handout-btn" onclick="printHandout()">🖨️ 列印講義</button>
+        </div>
+      </div>
+
+      <article class="handout-article" id="printableHandoutContent">
+        <div class="article-header">
+          <span class="unit-badge">總覽</span>
+          <h3>這課在說什麼？</h3>
+        </div>
+        <p class="lead-text">商周到隋唐，過著不同生活的人群從衝突與防禦，逐漸變成往來與互相學習。全課沿著一條時間線走：<strong>東周築牆 → 秦連長城 → 漢初和親／漢武帝派張騫 → 西晉永嘉之禍 → 北魏孝文帝漢化 → 唐太宗天可汗</strong>。</p>
+
+        <div class="article-header" style="margin-top:30px;">
+          <span class="unit-badge">主題 1</span>
+          <h3>商周至秦漢：從防禦到往來</h3>
+        </div>
+
+        <div class="lecture-cards-grid">
+          <div class="lecture-card">
+            <div class="card-icon">🐎</div>
+            <h4>兩種不同的生活</h4>
+            <ul>
+              <li><strong>農業民族</strong>：大致在<strong>長城以南</strong>，以農耕為主，較常定居。</li>
+              <li><strong>草原民族</strong>：大致在<strong>長城以北</strong>，以畜牧為主，逐水草而居。</li>
+              <li>生活方式不同，但彼此<strong>有貿易，也有衝突</strong>，會互相影響。</li>
+            </ul>
+          </div>
+          <div class="lecture-card">
+            <div class="card-icon">🧱</div>
+            <h4>長城是怎麼來的</h4>
+            <ul>
+              <li>東周末年，黃河流域各國為抵禦匈奴南下，<strong>各自修築城牆</strong>。</li>
+              <li>秦統一後，把秦代以前的城牆<strong>連接成長城</strong>，作為北方防線。</li>
+              <li>長城此後大致成為農業文化與草原文化的<strong>分界線</strong>。</li>
+              <li class="tip">⚠️ 秦是「連接舊牆」，不是最早蓋牆的人。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="article-header" style="margin-top:30px;">
+          <span class="unit-badge">主題 2</span>
+          <h3>漢朝的策略與張騫出使</h3>
+        </div>
+        <div class="strategy-grid">
+          <div class="strategy-card">
+            <span class="strategy-era">漢初</span>
+            <strong>和親</strong>
+            <p>國力較弱，與匈奴透過婚姻建立外交關係，先求安定。</p>
+          </div>
+          <div class="strategy-card accent">
+            <span class="strategy-era">漢武帝時</span>
+            <strong>張騫出使西域</strong>
+            <p>國力轉強，派張騫聯絡西域各國，<strong>想一起對抗匈奴</strong>。</p>
+          </div>
+        </div>
+        <div class="compare-table-box">
+          <h4>🌟 張騫出使：目的與結果要分清楚</h4>
+          <table class="styled-table">
+            <thead><tr><th>面向</th><th>內容</th></tr></thead>
+            <tbody>
+              <tr><td><strong>原本目的</strong></td><td>聯絡西域各國，共同對抗匈奴（軍事結盟）</td></tr>
+              <tr><td><strong>後來結果</strong></td><td>結盟沒有成功，卻增進漢人對西域的認識，使東西往來更加活絡</td></tr>
+              <tr><td><strong>雙向交流</strong></td><td>中國的<strong>絲綢</strong>向西傳播（最遠到大秦）；西域的音樂與物產傳入中國，如<strong>琵琶、笛、葡萄、胡瓜</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="article-header" style="margin-top:30px;">
+          <span class="unit-badge">主題 3</span>
+          <h3>魏晉至隋唐：從遷徙到融合</h3>
+        </div>
+
+        <div class="cause-chain">
+          <span>311 年永嘉之禍</span><i>→</i><span>晉室與大批漢人南遷長江流域（東晉）</span><i>→</i><span>帶來人力與農耕技術</span><i>→</i><span>加速南方開發</span><i>→</i><span>影響日後經濟重心南移</span>
+        </div>
+
+        <div class="lecture-cards-grid">
+          <div class="lecture-card">
+            <div class="card-icon">🌊</div>
+            <h4>永嘉之禍與人口南遷</h4>
+            <ul>
+              <li>漢代以來，北方草原民族陸續內遷，因風俗不同又受歧視，胡漢衝突不斷。</li>
+              <li>西元 <strong>311 年</strong>，匈奴攻進西晉首都<strong>洛陽</strong>，皇帝被俘，史稱<strong>永嘉之禍</strong>。</li>
+              <li>西晉滅亡後，晉室南遷長江流域，建立<strong>東晉</strong>。</li>
+              <li>大批漢人南移，帶來<strong>人力與農耕技術</strong>，加速南方開發。</li>
+            </ul>
+          </div>
+          <div class="lecture-card">
+            <div class="card-icon">🏯</div>
+            <h4>北魏孝文帝的漢化</h4>
+            <ul>
+              <li>北魏由<strong>鮮卑人</strong>建立（不是三國時代的曹魏）。</li>
+              <li>為了穩固統治、促進胡漢融合，孝文帝推動漢化。</li>
+              <li>措施：<strong>遷都平城 → 洛陽</strong>、說漢語、穿漢服、改漢姓、鼓勵胡漢通婚。</li>
+              <li>這些措施促進胡漢融合，奠定日後隋唐盛世的基礎。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="lecture-cards-grid" style="margin-top:16px;">
+          <div class="lecture-card wide">
+            <div class="card-icon">🌏</div>
+            <h4>隋唐的開放風氣</h4>
+            <ul>
+              <li>隋唐延續魏晉以來胡漢融合的風氣，對各族群態度<strong>開放、兼容並蓄</strong>。</li>
+              <li>唐太宗滅東突厥後，西北各族君長尊稱他為<strong>天可汗</strong>（普天下的君王），唐帝國成為東亞秩序的盟主。</li>
+              <li>外族<strong>商人、僧侶、留學生</strong>大量來華，文化交流頻繁。</li>
+              <li>唐代壁畫<strong>《唐客使圖》</strong>可見多國遣使來訪。</li>
+              <li class="tip">⚠️ 使節來訪代表往來頻繁，<strong>不代表</strong>那些地方都被唐朝統治。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="compare-table-box">
+          <h4>🌟 本課關鍵詞速查</h4>
+          <table class="styled-table">
+            <thead><tr><th>關鍵詞</th><th>一句話掌握</th></tr></thead>
+            <tbody>
+              <tr><td><strong>西域</strong></td><td>玉門關以西的地區，即今日新疆、中亞一帶</td></tr>
+              <tr><td><strong>絲路</strong></td><td>中國經過中亞對外的陸路交通路線，以絲綢為重要商品，後人因而稱之</td></tr>
+              <tr><td><strong>胡</strong></td><td>古代對北方草原民族的通稱，意思會隨時代與語境改變</td></tr>
+              <tr><td><strong>天可汗</strong></td><td>唐太宗的尊號，代表他在各族中的盟主地位</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <div class="handout-footer-cta">
+        <h3>🎯 講義讀完了嗎？準備接受挑戰！</h3>
+        <p>按下「開始挑戰」後會依序進行六道關卡，並開始計時。每完成一關會自動前往下一關。</p>
+        <button class="primary-btn super-big-btn" onclick="startFullChallenge()">🚀 開始挑戰！</button>
+      </div>
+    </section>
+
+    <!-- ==================== 頁籤 2：六道闖關 ==================== -->
+    <section id="tab-challenge" class="tab-pane">
+      <div class="exercise-statusbar">
+        <div class="status-col">
+          <span class="status-label">目前關卡</span>
+          <strong class="status-value" id="currentStageTitle">關卡 1：揭曉方塊</strong>
+        </div>
+        <div class="status-col timer-col">
+          <span class="status-label">⏱️ 挑戰總耗時</span>
+          <strong class="status-value timer-display" id="challengeTimerText">00:00</strong>
+        </div>
+        <div class="status-col">
+          <span class="status-label">🪙 累積得分</span>
+          <strong class="status-value" id="challengeScoreText">0</strong> 分
+        </div>
+        <div class="status-col">
+          <button class="back-handout-btn" onclick="returnToHandout()">📖 中途查看講義</button>
+        </div>
+      </div>
+
+      <div class="stage-stepper" id="stageStepper">
+        <div class="step-item active" id="stepIndicator1"><div class="step-circle">1</div><span class="step-name">揭曉方塊</span></div>
+        <div class="step-line" id="stepLine1"></div>
+        <div class="step-item" id="stepIndicator2"><div class="step-circle">2</div><span class="step-name">時空迷宮</span></div>
+        <div class="step-line" id="stepLine2"></div>
+        <div class="step-item" id="stepIndicator3"><div class="step-circle">3</div><span class="step-name">天命轉盤</span></div>
+        <div class="step-line" id="stepLine3"></div>
+        <div class="step-item" id="stepIndicator4"><div class="step-circle">4</div><span class="step-name">轉生配對</span></div>
+        <div class="step-line" id="stepLine4"></div>
+        <div class="step-item" id="stepIndicator5"><div class="step-circle">5</div><span class="step-name">漢化之路</span></div>
+        <div class="step-line" id="stepLine5"></div>
+        <div class="step-item" id="stepIndicator6"><div class="step-circle">6</div><span class="step-name">歷史偵探</span></div>
+      </div>
+
+      <!-- 關卡 1：揭曉方塊 -->
+      <div id="stageBox" class="challenge-stage active">
+        <div class="game-toolbar">
+          <div class="game-info">
+            <h3>🎁 關卡 1：揭曉方塊</h3>
+            <p>翻開 8 個歷史秘寶方塊，每個方塊都藏著一道題，答對才能解鎖。</p>
+          </div>
+          <div class="game-stats"><span>已解鎖：<strong id="boxesOpened">0</strong> / 8</span></div>
+        </div>
+        <div class="box-grid" id="boxGrid"></div>
+      </div>
+
+      <!-- 關卡 2：時空迷宮 -->
+      <div id="stageMaze" class="challenge-stage">
+        <div class="game-toolbar">
+          <div class="game-info">
+            <h3>🧭 關卡 2：時空迷宮</h3>
+            <p>化身不及格大學士，探索古堡、補完歷史咒語，擊敗三位魔物。剩餘生命就是本關分數。</p>
+          </div>
+          <div class="game-stats"><span>擊敗敵人：<strong id="mazeGatesUnlocked">0</strong> / 3</span></div>
+        </div>
+        <div class="maze-layout">
+          <div class="maze-main">
+            <div id="mazeGrid" class="mage-viewport"></div>
+            <div class="maze-controls">
+              <button data-move="up" aria-label="前進">前進</button>
+              <button data-move="left" aria-label="左轉">左轉</button>
+              <button data-move="down" aria-label="後退">後退</button>
+              <button data-move="right" aria-label="右轉">右轉</button>
+            </div>
+            <p class="maze-tip">W / ↑ 前進 · S / ↓ 後退 · A D / ← → 轉向<br>敵人每秒巡邏，沿通道兩格內發現你便追擊。答錯受到 20 點傷害。</p>
+          </div>
+          <aside class="maze-radar">
+            <h4>討伐名冊</h4>
+            <ol id="mazeTargets">
+              <li data-gate="1"><b>1</b><div>玄鐵城衛<small>重甲巨像 · 長城咒語</small></div></li>
+              <li data-gate="2"><b>2</b><div>沙海妖狐<small>雙耳狐靈 · 絲路咒語</small></div></li>
+              <li data-gate="3"><b>3</b><div>渡江幽魂<small>青焰亡靈 · 南遷咒語</small></div></li>
+            </ol>
+            <p class="maze-message" id="mazeMessage">循著道路尋找三位守門人。</p>
+          </aside>
+        </div>
+      </div>
+
+      <!-- 關卡 3：天命轉盤 -->
+      <div id="stageWheel" class="challenge-stage">
+        <div class="game-toolbar">
+          <div class="game-info">
+            <h3>🎡 關卡 3：天命轉盤</h3>
+            <p>轉動轉盤抽出身分，答對後該扇區就會消失，共 5 次機會。</p>
+          </div>
+          <div class="game-stats"><span>剩餘轉數：<strong id="spinsLeft">5</strong> 次</span></div>
+        </div>
+        <div class="wheel-stage">
+          <div class="wheel-container">
+            <div class="wheel-pointer">▼</div>
+            <canvas id="wheelCanvas" width="480" height="480"></canvas>
+            <button id="spinBtn" class="spin-action-btn" onclick="spinWheel()">啟動<br>轉盤</button>
+          </div>
+          <div class="wheel-result-card">
+            <div class="result-badge">當前身分</div>
+            <h3 id="wheelFateTitle">等待轉盤旋轉…</h3>
+            <p id="wheelFateDesc">按下中央「啟動轉盤」，看看你抽到哪個歷史身分。</p>
+            <button id="wheelAnswerBtn" class="primary-btn hide" onclick="openWheelQuestion()">接受身分考驗 ➔</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 關卡 4：轉生者的歷史之旅 -->
+      <div id="stageMatch" class="challenge-stage">
+        <div class="game-toolbar">
+          <div class="game-info">
+            <h3>🔮 關卡 4：轉生者的歷史之旅</h3>
+            <p>你不斷轉生於各時代。從最遠的東周開始，每轉生一次，就要判斷眼前事件背後的意義。</p>
+          </div>
+          <div class="game-stats"><span>轉生進度：<strong id="matchCount">0</strong> / 6</span></div>
+        </div>
+        <div class="story-arena">
+          <div class="story-card">
+            <div class="story-tags">
+              <span class="story-era" id="storyEra">東周</span>
+              <span class="story-identity" id="storyIdentity">轉生身分：趙國平民</span>
+            </div>
+            <p class="story-text" id="storyText"></p>
+            <p class="story-question" id="storyQuestion"></p>
+            <div class="story-options" id="storyOptions"></div>
+            <p class="feedback-line" id="matchFeedback"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 關卡 5：獨孤求敗的漢化之路 -->
+      <div id="stageQuiz" class="challenge-stage">
+        <div class="game-toolbar">
+          <div class="game-info">
+            <h3>⚡ 關卡 5：獨孤求敗的漢化之路</h3>
+            <p>你是北魏青年官員「獨孤求敗」，跟在孝文帝身邊。跟著劇情，做出六個關鍵判斷。</p>
+          </div>
+          <div class="game-stats">
+            <span>進度：<strong id="quizIndex">1</strong> / 6 題</span>
+            <span>連擊：<strong id="quizCombo">0</strong> 🔥</span>
+          </div>
+        </div>
+        <div class="quiz-arena">
+          <div class="lifelines-bar">
+            <button class="lifeline-btn" id="lifeline5050" onclick="useLifeline5050()"><span class="btn-icon">✂️</span> 50:50 刪二錯</button>
+            <button class="lifeline-btn" id="lifelineHint" onclick="useLifelineHint()"><span class="btn-icon">💡</span> 名師提示</button>
+          </div>
+          <div class="quiz-question-card">
+            <div class="quiz-meta">
+              <span class="era-tag" id="quizEraTag">北魏・平城皇宮</span>
+              <span class="character-tag">🪶 獨孤求敗</span>
+            </div>
+            <p class="quiz-story" id="quizStoryText"></p>
+            <h2 class="quiz-title" id="quizTitle">題目載入中…</h2>
+            <div id="quizHintText" class="quiz-hint-box hide">提示內容</div>
+            <div class="quiz-options-grid" id="quizOptionsGrid"></div>
+            <div id="quizFeedbackBox" class="feedback-msg"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 關卡 6：歷史偵探（永嘉之禍） -->
+      <div id="stageDetective" class="challenge-stage">
+        <div class="game-toolbar">
+          <div class="game-info">
+            <h3>🔍 關卡 6：歷史偵探</h3>
+            <p>永嘉之禍的六則傳聞中，有些是真相、有些是謊言。把每則線索拖到「真相」或「謊言」區，全部放好後結算。</p>
+          </div>
+          <div class="game-stats"><span>已分類：<strong id="errorsFoundCount">0</strong> / 6 則</span></div>
+        </div>
+        <div class="detective-case-wrapper">
+          <div class="ancient-scroll">
+            <div class="scroll-header">
+              <div class="scroll-stamp">密奏檔案</div>
+              <h3>📜 永嘉之禍傳聞錄</h3>
+            </div>
+            <div class="scroll-content" id="scrollContent"></div>
+          </div>
+          <div class="detective-log-card">
+            <h4>📋 偵探辦案日誌</h4>
+            <p class="detective-instructions">拖曳卡片至真相或謊言區；也可先點選卡片，再點分類區。全部放好前可移動更改。</p>
+            <div class="verdict-columns">
+              <section class="verdict-zone" data-verdict="true" tabindex="0" role="button" aria-label="放入真相區"><h5>真相</h5><p>符合歷史事實</p><div class="verdict-cards"></div></section>
+              <section class="verdict-zone" data-verdict="false" tabindex="0" role="button" aria-label="放入謊言區"><h5>謊言</h5><p>與歷史事實不符</p><div class="verdict-cards"></div></section>
+            </div>
+            <p id="detectiveStatus" role="status" aria-live="polite">請分類所有線索卡片。</p>
+          </div>
+        </div>
+        <div id="detectiveResults" class="detective-results" hidden></div>
+      </div>
+
+      <!-- 共用答題彈窗 -->
+      <div id="gameModal" class="game-modal">
+        <div class="modal-card">
+          <div class="modal-header">
+            <span class="modal-badge" id="gmBadge">考驗</span>
+            <h3 id="gmTitle">題目</h3>
+          </div>
+          <div class="modal-body">
+            <div class="clue-box" id="gmClueBox"><span class="clue-icon" id="gmIcon">📜</span><p id="gmDesc">提示</p></div>
+            <p class="question-prompt" id="gmQuestion">問題</p>
+            <div class="options-stack" id="gmOptions"></div>
+            <div id="gmFeedback" class="feedback-msg"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 完成結算彈窗 -->
+      <div id="challengeCompleteModal" class="game-modal">
+        <div class="modal-card completion-card">
+          <div class="modal-header success-header">
+            <span class="modal-badge">🎉 全數通關</span>
+            <h3>商周至隋唐的民族與文化 · 闖關結算</h3>
+          </div>
+          <div class="modal-body text-center">
+            <div class="completion-icon">🏆</div>
+            <h4>太棒了！你已順利完成全部 6 道歷史關卡！</h4>
+            <div class="result-summary-grid">
+              <div class="result-box"><span class="res-num" id="finalTotalScore">0</span><span class="res-label">作業總得分</span></div>
+              <div class="result-box"><span class="res-num" id="finalTotalTime">00:00</span><span class="res-label">總共花費時間</span></div>
+            </div>
+            <p class="result-evaluation" id="finalEvaluation"></p>
+            <div class="modal-actions-row">
+              <button class="primary-btn gold-bg big-btn" onclick="goToUnit('tab-summary')">🏆 查看榮譽學習證書 ➔</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 頁籤 3：學習成就與證書 ==================== -->
+    <section id="tab-summary" class="tab-pane">
+      <div class="summary-container">
+        <div class="cert-card" id="printableCertificate">
+          <div class="cert-border">
+            <div class="cert-stamp">歷史通</div>
+            <div class="cert-header">
+              <h2>國中歷史二上 · 第2課</h2>
+              <h1>榮譽學習成就證書</h1>
+              <p class="cert-subtitle">商周至隋唐的民族與文化 · 六關挑戰認證</p>
+            </div>
+            <div class="cert-body">
+              <p class="cert-text">
+                茲證明 <strong class="cert-highlight" id="certClass">201</strong>
+                班 <strong class="cert-highlight" id="certName">歷史探險家</strong>
+                （座號：<strong id="certSeat">1</strong>），已讀通長城、絲路、人口南遷與北魏漢化，並完成六道素養挑戰，表現優異！
+              </p>
+              <div class="cert-stats-grid">
+                <div class="cert-stat-box"><span class="stat-num" id="certTotalScore">0</span><span class="stat-label">作業總積分</span></div>
+                <div class="cert-stat-box"><span class="stat-num" id="certTotalStars">0</span><span class="stat-label">摘取榮譽星星</span></div>
+                <div class="cert-stat-box"><span class="stat-num" id="certTotalTime">00:00</span><span class="stat-label">作答總耗時</span></div>
+              </div>
+              <div class="badges-row" id="certBadgesRow"></div>
+              <div class="cert-footer">
+                <div class="cert-sign"><span>歷史科教學團隊 認證</span><span class="cert-date" id="certDate">2026/09/22</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="summary-actions">
+          <button class="primary-btn big-btn" onclick="printCertificate()">🖨️ 列印學習證書</button>
+          <button class="secondary-btn big-btn" onclick="shareScore()">📋 複製成績報告</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 學籍登記彈窗 -->
+    <div id="studentRegistrationModal" class="game-modal">
+      <div class="modal-card">
+        <div class="modal-header"><span class="modal-badge">📝 學籍登記</span><h3>填寫資料以製作學習證書</h3></div>
+        <div class="modal-body">
+          <p class="auth-subtext">請確認班級、座號與姓名，完成後將寫在學習證書上。</p>
+          <div class="form-row"><label for="regClass">班級</label><input type="text" id="regClass" class="form-input" value="201"></div>
+          <div class="form-row"><label for="regSeat">座號</label><input type="number" id="regSeat" class="form-input" value="1"></div>
+          <div class="form-row"><label for="regName">姓名</label><input type="text" id="regName" class="form-input" value="歷史探險家"></div>
+          <div class="modal-actions-row" style="margin-top:22px;">
+            <button type="button" class="secondary-btn" onclick="closeModal('studentRegistrationModal')">返回講義</button>
+            <button type="button" class="primary-btn gold-bg big-btn" onclick="handleRegistrationSubmit()">🚀 確認並開始闖關</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="app-footer"><p>國中歷史二上 108 課綱數位互動學習網頁 ｜ 配合課文講義複習設計</p></footer>
+
+  <script src="app.js"></script>
+  <script src="mage-maze.js"></script>
+</body>
+</html>
