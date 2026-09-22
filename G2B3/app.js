@@ -328,37 +328,38 @@ function startFullChallenge() {
   regSeat.value = '';
   regName.value = '';
   pendingG2B3Profile = null;
-  document.getElementById('confirmRegistrationBtn').disabled = true;
-  document.getElementById('guestRegistrationBtn').hidden = true;
-  document.getElementById('authStatusText').textContent = '請輸入學習帳號查詢名冊資料。';
-
   document.getElementById('studentRegistrationModal').classList.add('show');
   setTimeout(() => document.getElementById('regEmail').focus(), 150);
 }
 
 async function lookupG2B3Student() {
   const email = document.getElementById('regEmail').value.trim();
-  const status = document.getElementById('authStatusText');
   if (!email) {
     alert('請輸入學習帳號 Email！');
     return;
   }
-  status.textContent = '正在查詢學習帳號...';
   const result = await FirebaseService.loginStudent(email);
   if (result.status === 'registered') {
     pendingG2B3Profile = result.profile;
     document.getElementById('regClass').value = result.profile.classId;
     document.getElementById('regSeat').value = result.profile.seatNo;
     document.getElementById('regName').value = result.profile.name;
-    document.getElementById('confirmRegistrationBtn').disabled = false;
-    document.getElementById('guestRegistrationBtn').hidden = true;
-    status.textContent = '已找到學習帳號，請確認班級、座號與姓名。';
+    closeModal('studentRegistrationModal');
+    document.getElementById('studentProfileModal').classList.add('show');
+  } else if (result.status === 'guest') {
+    pendingG2B3Profile = null;
+    closeModal('studentRegistrationModal');
+    document.getElementById('studentGuestModal').classList.add('show');
   } else {
     pendingG2B3Profile = null;
-    document.getElementById('confirmRegistrationBtn').disabled = true;
-    document.getElementById('guestRegistrationBtn').hidden = false;
-    status.textContent = '您可以以訪客模式遊玩。訪客模式不會登錄正式成績。';
+    alert(result.message || '目前無法查詢學習帳號，請稍後再試。');
   }
+}
+
+function backToG2B3Query(currentModalId) {
+  closeModal(currentModalId);
+  document.getElementById('studentRegistrationModal').classList.add('show');
+  setTimeout(() => document.getElementById('regEmail').focus(), 150);
 }
 
 function startG2B3Guest() {
@@ -373,7 +374,7 @@ function startG2B3Guest() {
   document.getElementById('studentSeat').value = '00';
   document.getElementById('studentName').value = regName;
   updateCertificate();
-  closeModal('studentRegistrationModal');
+  closeModal('studentGuestModal');
   if (gameState.challenge.completed) {
     goToUnit('tab-summary');
     return;
@@ -420,7 +421,7 @@ async function handleRegistrationSubmit(e) {
   document.getElementById('studentName').value = profile.name;
 
   updateCertificate();
-  closeModal('studentRegistrationModal');
+  closeModal('studentProfileModal');
 
   if (gameState.challenge.completed) {
     await uploadScoreToGAS();

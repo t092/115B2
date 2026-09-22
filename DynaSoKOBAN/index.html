@@ -111,26 +111,55 @@
   .modal-overlay.hidden { display: none; }
   .step-hidden { display: none; }
   .modal-box {
-    background: #2a2420; border: 2px solid #8d7a58;
-    border-radius: 14px; padding: 28px 36px; text-align: center;
-    box-shadow: 0 16px 40px rgba(0,0,0,.7); max-width: 380px; width: 90%;
+    background: #fff; border: 1px solid rgba(67, 56, 202, .12);
+    border-radius: 22px; padding: 0 30px 28px; text-align: left;
+    color: #263248; box-shadow: 0 24px 70px rgba(0,0,0,.42);
+    max-width: 620px; width: min(92vw, 620px); overflow: hidden;
   }
-  .modal-box h3 { color: #e0b46a; letter-spacing: 2px; margin-bottom: 8px; font-size: 20px; }
-  .modal-box p { font-size: 14px; color: #b9a98c; margin-bottom: 18px; }
+  .modal-box h3 {
+    color: #fff; background: linear-gradient(135deg, #37309a, #4338ca);
+    margin: 0 -30px 24px; padding: 26px 30px 22px;
+    letter-spacing: 1px; font-size: 25px;
+  }
+  .modal-box h3::before {
+    content: '學籍登記'; display: block; width: fit-content;
+    margin-bottom: 12px; padding: 5px 12px; border-radius: 20px;
+    background: rgba(245,158,11,.85); color: #fff; font-size: 13px;
+    letter-spacing: 0;
+  }
+  .modal-box p { font-size: 14px; color: #526176; margin-bottom: 18px; }
+  .modal-box .auth-panel {
+    background: linear-gradient(135deg, #effcf6, #e3f3ff);
+    border: 2px solid #b5f2cf; border-radius: 16px; padding: 18px;
+    margin-bottom: 22px;
+  }
+  .modal-box .auth-panel strong { display: block; color: #10634f; font-size: 18px; margin-bottom: 6px; }
+  .modal-box .auth-panel p { margin: 0; color: #526176; line-height: 1.7; }
+  .modal-box .auth-status { background: #fff4d8; border: 1px dashed #f59e0b; border-radius: 12px; padding: 11px 14px; color: #9a4d12; margin-top: 12px; }
   .input-row { display: flex; gap: 12px; margin-bottom: 20px; justify-content: center; }
   .input-group { text-align: left; }
   .input-group label { display: block; font-size: 12px; color: #8d7f6a; margin-bottom: 4px; }
   .input-group input {
-    background: #1c1815; border: 1px solid #54483a; border-radius: 6px;
-    padding: 8px 12px; color: #fff; font-size: 16px; width: 100px; text-align: center;
+    background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 10px;
+    padding: 12px; color: #263248; font-size: 16px; width: 100%; text-align: left;
     outline: none;
   }
-  .input-group input:focus { border-color: #e0b46a; }
+  .input-group input:focus { border-color: #4338ca; box-shadow: 0 0 0 4px rgba(67,56,202,.15); }
   .confirm-btn {
-    background: #9d5945; color: #fff; border: none; border-radius: 6px;
-    padding: 10px 24px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%;
+    background: #ee8c00; color: #fff; border: none; border-radius: 10px;
+    padding: 13px 24px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%;
   }
-  .confirm-btn:hover { background: #b06a52; }
+  .confirm-btn:hover { background: #d97900; }
+  .modal-box .input-row { display: grid; grid-template-columns: 1fr 1fr 1.4fr; text-align: left; }
+  .modal-box .input-row .input-group input[readonly] { background: #eef2f7; color: #64748b; }
+  .modal-box .input-row .input-group:last-child input { border-color: #4338ca; }
+  .modal-box .notice-text { color: #9a4d12; }
+  @media (max-width: 560px) {
+    .modal-box { padding: 0 20px 22px; }
+    .modal-box h3 { margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; font-size: 21px; }
+    .modal-box .input-row { grid-template-columns: 1fr 1fr; }
+    .modal-box .input-row .input-group:last-child { grid-column: 1 / -1; }
+  }
 </style>
 </head>
 <body>
@@ -147,7 +176,7 @@
      <div id="loginSection" class="auth-section">
        <p style="font-size:15px; color:#e0cfA8; letter-spacing:2px; margin-bottom:14px; font-weight:bold;">不用 Google 登入也能開始</p>
        <div>
-         <button id="studentBtn" class="confirm-btn" onclick="openStudentForm()">📝 填寫資料並開始作業</button>
+          <button id="studentBtn" class="confirm-btn" onclick="openStudentForm()">📝 輸入學習帳號</button>
          <button id="guestBtn" class="sec-btn" onclick="handleGuestMode()">🎮 純體驗（不記錄成績）</button>
        </div>
        <p class="notice-text">※ 學籍資料由學生填寫，成績送出後標記為待教師核對。</p>
@@ -168,19 +197,27 @@
     </div>
   </div>
 
-  <!-- 學生確認資料彈窗 -->
+  <!-- 第一步：只查詢學習帳號 -->
   <div id="classSeatModal" class="modal-overlay hidden">
     <div class="modal-box">
-      <h3>學習帳號確認</h3>
-      <div id="emailStep">
-        <p>請先輸入學習帳號 Email 查詢名冊：</p>
-        <div class="input-group">
-          <label for="inputEmail">學習帳號 Email</label>
-          <input id="inputEmail" type="email" placeholder="例如 940791@st.tc.edu.tw">
-        </div>
-        <button class="confirm-btn" onclick="lookupStudentAccount()">查詢帳號</button>
+      <h3>建立學習檔案與成就證書資料</h3>
+      <div class="auth-panel">
+        <strong>🏫 學習帳號與成績登錄（Firebase 名冊）</strong>
+        <p>輸入學習帳號後，系統會從 Firebase 名冊帶入班級與座號；姓名可改為課堂使用的代號。查不到的帳號可以訪客模式體驗，但不會保留成績。</p>
       </div>
-      <div id="profileStep" class="step-hidden">
+      <p>請輸入學習帳號 Email：</p>
+      <div class="input-group">
+        <label for="inputEmail">學習帳號 Email</label>
+        <input id="inputEmail" type="email" placeholder="例如 940791@st.tc.edu.tw">
+      </div>
+      <button class="confirm-btn" onclick="lookupStudentAccount()">確定</button>
+    </div>
+  </div>
+
+  <!-- 第二步：顯示名冊資料並確認 -->
+  <div id="profileModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3>請確認學習資料</h3>
         <p>請確認資料；班級與座號由名冊帶入，不可修改。</p>
         <div class="input-row">
           <div class="input-group">
@@ -197,12 +234,17 @@
           </div>
         </div>
         <button class="confirm-btn" onclick="confirmClassSeat()">確認並開始遊戲</button>
-      </div>
-      <div id="guestStep" class="step-hidden">
-        <p>您可以以訪客模式遊玩。</p>
-        <p class="notice-text">訪客模式可以體驗遊戲，但不會登錄正式成績。</p>
-        <button class="confirm-btn" onclick="startGuestFromLogin()">以訪客模式開始</button>
-      </div>
+    </div>
+  </div>
+
+  <!-- 查無名冊：獨立訪客提示彈窗 -->
+  <div id="guestModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3>學習帳號不存在</h3>
+      <p>查不到這個學習帳號。</p>
+      <p class="notice-text">可以使用訪客模式體驗遊戲，但成績不會保留。</p>
+      <button class="sec-btn" onclick="backToStudentQuery()">返回查詢</button>
+      <button class="confirm-btn" onclick="startGuestFromLogin()">以訪客模式體驗</button>
     </div>
   </div>
 
@@ -317,9 +359,6 @@ function openStudentForm() {
   document.getElementById('inputClass').value = '';
   document.getElementById('inputSeat').value = '';
   document.getElementById('inputName').value = '';
-  document.getElementById('emailStep').classList.remove('step-hidden');
-  document.getElementById('profileStep').classList.add('step-hidden');
-  document.getElementById('guestStep').classList.add('step-hidden');
   document.getElementById('classSeatModal').classList.remove('hidden');
 }
 
@@ -334,12 +373,16 @@ async function lookupStudentAccount() {
     document.getElementById('inputClass').value = result.profile.classId;
     document.getElementById('inputSeat').value = result.profile.seatNo;
     document.getElementById('inputName').value = result.profile.name;
-    document.getElementById('emailStep').classList.add('step-hidden');
-    document.getElementById('profileStep').classList.remove('step-hidden');
+    document.getElementById('classSeatModal').classList.add('hidden');
+    document.getElementById('profileModal').classList.remove('hidden');
     return;
   }
-  document.getElementById('emailStep').classList.add('step-hidden');
-  document.getElementById('guestStep').classList.remove('step-hidden');
+  if (result.status === 'guest') {
+    document.getElementById('classSeatModal').classList.add('hidden');
+    document.getElementById('guestModal').classList.remove('hidden');
+  } else {
+    alert(result.message || '目前無法查詢學習帳號，請稍後再試。');
+  }
 }
 
 // 確認名冊資料並開始遊戲
@@ -350,14 +393,19 @@ async function confirmClassSeat() {
   if (result.status !== 'registered') return;
   CAI.setStudent({...result.profile, isTeacher: false});
 
-  document.getElementById('classSeatModal').classList.add('hidden');
+  document.getElementById('profileModal').classList.add('hidden');
   renderAuthUI();
 }
 
 function startGuestFromLogin() {
   CAI.setGuestMode();
-  document.getElementById('classSeatModal').classList.add('hidden');
+  document.getElementById('guestModal').classList.add('hidden');
   renderAuthUI();
+}
+
+function backToStudentQuery() {
+  document.getElementById('guestModal').classList.add('hidden');
+  openStudentForm();
 }
 
 // 免登入體驗試玩

@@ -143,7 +143,9 @@ const CAI = {
         profile: {
           classId: student.classId,
           seatNo: student.seatNo,
-          name: student.name
+          name: student.name,
+          email: student.email,
+          registered: student.registered === true
         },
         score: scoreData.totalScore,
         moves: scoreData.moves,

@@ -645,7 +645,7 @@
       </div>
     </section>
 
-    <!-- 學生報名與資料登記彈窗 (製作證書使用) -->
+    <!-- 第一步：只查詢學習帳號 -->
     <div id="studentRegistrationModal" class="game-modal">
       <div class="modal-card">
         <div class="modal-header">
@@ -662,38 +662,65 @@
                   <span class="auth-desc">（Firebase 名冊）</span>
                </div>
              </div>
-             <p class="auth-subtext">輸入學習帳號後，系統會從 Firebase 名冊帶入班級與座號；姓名可改為課堂使用的代號。查不到的帳號會以訪客模式進行。</p>
+             <p class="auth-subtext">輸入學習帳號後，系統會從 Firebase 名冊帶入班級與座號；姓名可改為課堂使用的代號。查不到的帳號可以訪客模式體驗，但不會保留成績。</p>
 
-             <div id="authStatusBox" class="auth-status-box pending">
-                <span class="auth-status-icon">🔎</span>
-                <span id="authStatusText">請輸入學習帳號查詢名冊資料。</span>
-             </div>
+        </div>
+
+        <form id="studentRegistrationForm" onsubmit="lookupG2B3Student(); return false;">
+           <div class="form-row">
+             <label for="regEmail">Google 學習帳號 <span class="req-star">*</span></label>
+             <input type="email" id="regEmail" class="form-input" placeholder="例如：940791@st.tc.edu.tw" required>
+              <button type="button" class="secondary-btn" style="margin-top:8px;" onclick="lookupG2B3Student()">確定</button>
+           </div>
+          <div class="modal-actions-row" style="margin-top: 24px;">
+            <button type="button" class="secondary-btn" onclick="closeModal('studentRegistrationModal')">返回閱讀講義</button>
           </div>
+        </form>
+      </div>
+    </div>
 
-          <form id="studentRegistrationForm" onsubmit="handleRegistrationSubmit(event)">
-             <div class="form-row">
-                <label for="regEmail">Google 學習帳號 <span class="req-star">*</span></label>
-                <input type="email" id="regEmail" class="form-input" placeholder="例如：940791@st.tc.edu.tw" required>
-                <button type="button" class="secondary-btn" style="margin-top:8px;" onclick="lookupG2B3Student()">🔎 查詢學習帳號</button>
-             </div>
-             <div class="form-row">
-               <label for="regClass">名冊班級</label>
-               <input type="text" id="regClass" class="form-input" readonly placeholder="查詢後帶入">
-             </div>
-             <div class="form-row">
-               <label for="regSeat">名冊座號</label>
-               <input type="text" id="regSeat" class="form-input" readonly placeholder="查詢後帶入">
-             </div>
-            <div class="form-row">
-               <label for="regName">顯示代號（可選）</label>
-               <input type="text" id="regName" class="form-input" placeholder="不填則使用名冊姓名">
-            </div>
-            <div class="modal-actions-row" style="margin-top: 24px;">
-              <button type="button" class="secondary-btn" onclick="closeModal('studentRegistrationModal')">返回閱讀講義</button>
-              <button type="button" id="guestRegistrationBtn" class="secondary-btn" onclick="startG2B3Guest()" hidden>👤 以訪客模式開始</button>
-              <button type="submit" id="confirmRegistrationBtn" class="primary-btn gold-bg big-btn" disabled>🚀 確認並開始遊戲</button>
-            </div>
-          </form>
+    <!-- 第二步：顯示名冊資料並確認 -->
+    <div id="studentProfileModal" class="game-modal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <span class="modal-badge">✅ 名冊確認</span>
+          <h3>請確認學習資料</h3>
+        </div>
+        <div class="modal-body">
+          <p class="auth-subtext">班級與座號由 Firebase 名冊帶入且不可修改；姓名可以改成課堂使用的代號。</p>
+          <div class="form-row">
+            <label for="regClass">名冊班級</label>
+            <input type="text" id="regClass" class="form-input" readonly>
+          </div>
+          <div class="form-row">
+            <label for="regSeat">名冊座號</label>
+            <input type="text" id="regSeat" class="form-input" readonly>
+          </div>
+          <div class="form-row">
+            <label for="regName">顯示代號（可選）</label>
+            <input type="text" id="regName" class="form-input" placeholder="不填則使用名冊姓名">
+          </div>
+          <div class="modal-actions-row" style="margin-top: 24px;">
+            <button type="button" class="secondary-btn" onclick="backToG2B3Query('studentProfileModal')">返回查詢</button>
+            <button type="button" id="confirmRegistrationBtn" class="primary-btn gold-bg big-btn" onclick="handleRegistrationSubmit(event)">🚀 確認並開始遊戲</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 查無名冊：獨立訪客提示彈窗 -->
+    <div id="studentGuestModal" class="game-modal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <span class="modal-badge">👤 訪客體驗</span>
+          <h3>學習帳號不存在</h3>
+        </div>
+        <div class="modal-body text-center">
+          <p class="auth-subtext">查不到這個學習帳號，可以訪客模式體驗遊戲，但完成的成績不會保留。</p>
+          <div class="modal-actions-row" style="margin-top: 24px;">
+            <button type="button" class="secondary-btn" onclick="backToG2B3Query('studentGuestModal')">返回查詢</button>
+            <button type="button" class="primary-btn gold-bg big-btn" onclick="startG2B3Guest()">👤 以訪客模式體驗</button>
+          </div>
         </div>
       </div>
     </div>

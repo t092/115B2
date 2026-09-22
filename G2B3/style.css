@@ -119,6 +119,11 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* 學籍資料改由開始作業時的名冊彈窗確認。 */
+.student-bar > .input-group {
+  display: none;
+}
+
 .input-group {
   display: flex;
   align-items: center;
