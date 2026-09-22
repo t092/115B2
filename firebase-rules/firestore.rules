@@ -13,6 +13,7 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.unitName in [
           'G2B3',
+          'G2B3L21',
           'DynaSoKOBAN'
         ]
         && request.resource.data.status == 'pending_review'

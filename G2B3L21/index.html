@@ -70,7 +70,7 @@
         </div>
         <p class="lead-text">商周到隋唐，過著不同生活的人群從衝突與防禦，逐漸變成往來與互相學習。全課沿著一條時間線走：<strong>東周築牆 → 秦連長城 → 漢初和親／漢武帝派張騫 → 西晉永嘉之禍 → 北魏孝文帝漢化 → 唐太宗天可汗</strong>。</p>
 
-        <div class="article-header" style="margin-top:30px;">
+        <div class="article-header">
           <span class="unit-badge">主題 1</span>
           <h3>商周至秦漢：從防禦到往來</h3>
         </div>
@@ -97,7 +97,7 @@
           </div>
         </div>
 
-        <div class="article-header" style="margin-top:30px;">
+        <div class="article-header">
           <span class="unit-badge">主題 2</span>
           <h3>漢朝的策略與張騫出使</h3>
         </div>
@@ -125,7 +125,7 @@
           </table>
         </div>
 
-        <div class="article-header" style="margin-top:30px;">
+        <div class="article-header">
           <span class="unit-badge">主題 3</span>
           <h3>魏晉至隋唐：從遷徙到融合</h3>
         </div>
@@ -157,7 +157,7 @@
           </div>
         </div>
 
-        <div class="lecture-cards-grid" style="margin-top:16px;">
+        <div class="lecture-cards-grid">
           <div class="lecture-card wide">
             <div class="card-icon">🌏</div>
             <h4>隋唐的開放風氣</h4>
@@ -409,6 +409,10 @@
               <div class="result-box"><span class="res-num" id="finalTotalTime">00:00</span><span class="res-label">總共花費時間</span></div>
             </div>
             <p class="result-evaluation" id="finalEvaluation"></p>
+            <div id="cloudSyncStatusBox" class="cloud-sync-status-box">
+              <span id="cloudSyncIcon" class="cloud-sync-icon">☁️</span>
+              <span id="cloudSyncText" role="status" aria-live="polite">名冊學生請於證書頁按「儲存成績至 Firebase」送出成績。</span>
+            </div>
             <div class="modal-actions-row">
               <button class="primary-btn gold-bg big-btn" onclick="goToUnit('tab-summary')">🏆 查看榮譽學習證書 ➔</button>
             </div>
@@ -446,25 +450,73 @@
             </div>
           </div>
         </div>
+        <div id="certCloudSyncPill" class="cloud-sync-status-box" style="max-width: 600px; margin: 18px auto 0;">
+          <span id="certCloudSyncIcon" class="cloud-sync-icon">☁️</span>
+          <span id="certCloudSyncText" role="status" aria-live="polite">名冊學生按下方按鈕可將成績送出至 Firebase，等待教師核對。</span>
+        </div>
         <div class="summary-actions">
+          <button class="primary-btn big-btn" onclick="openScoreForm()">☁️ 儲存成績至 Firebase</button>
           <button class="primary-btn big-btn" onclick="printCertificate()">🖨️ 列印學習證書</button>
           <button class="secondary-btn big-btn" onclick="shareScore()">📋 複製成績報告</button>
         </div>
       </div>
     </section>
 
-    <!-- 學籍登記彈窗 -->
+    <!-- 第一步：學習帳號登入（查詢 Firebase 名冊） -->
     <div id="studentRegistrationModal" class="game-modal">
       <div class="modal-card">
-        <div class="modal-header"><span class="modal-badge">📝 學籍登記</span><h3>填寫資料以製作學習證書</h3></div>
+        <div class="modal-header"><span class="modal-badge">🔑 學習帳號登入</span><h3>登入名冊帳號才能記錄成績</h3></div>
         <div class="modal-body">
-          <p class="auth-subtext">請確認班級、座號與姓名，完成後將寫在學習證書上。</p>
-          <div class="form-row"><label for="regClass">班級</label><input type="text" id="regClass" class="form-input" value="201"></div>
-          <div class="form-row"><label for="regSeat">座號</label><input type="number" id="regSeat" class="form-input" value="1"></div>
-          <div class="form-row"><label for="regName">姓名</label><input type="text" id="regName" class="form-input" value="歷史探險家"></div>
+          <div class="school-auth-card">
+            <div class="auth-card-header">
+              <span class="auth-icon">🏫</span>
+              <div>
+                <strong class="auth-title">學習帳號與成績登錄</strong>
+                <span class="auth-desc">（Firebase 名冊）</span>
+              </div>
+            </div>
+            <p class="auth-subtext">輸入學習帳號後，系統會從 Firebase 名冊帶入班級與座號；姓名可改成課堂使用的代號。查不到的帳號可以用訪客模式體驗，但完成的成績不會記錄。</p>
+          </div>
+
+          <div class="form-row">
+            <label for="regEmail">Google 學習帳號 <span class="req-star">*</span></label>
+            <input type="email" id="regEmail" class="form-input" placeholder="例如：1150001@st.tc.edu.tw">
+            <button type="button" class="secondary-btn" style="margin-top:8px;" onclick="lookupStudent()">確定</button>
+          </div>
+
           <div class="modal-actions-row" style="margin-top:22px;">
             <button type="button" class="secondary-btn" onclick="closeModal('studentRegistrationModal')">返回講義</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 第二步：名冊資料確認 -->
+    <div id="studentProfileModal" class="game-modal">
+      <div class="modal-card">
+        <div class="modal-header"><span class="modal-badge">✅ 名冊確認</span><h3>請確認學習資料</h3></div>
+        <div class="modal-body">
+          <p class="auth-subtext">班級與座號由 Firebase 名冊帶入且不可修改；姓名可以改成課堂使用的代號。</p>
+          <div class="form-row"><label for="regClass">名冊班級</label><input type="text" id="regClass" class="form-input" readonly></div>
+          <div class="form-row"><label for="regSeat">名冊座號</label><input type="text" id="regSeat" class="form-input" readonly></div>
+          <div class="form-row"><label for="regName">顯示代號（可選）</label><input type="text" id="regName" class="form-input" placeholder="不填則使用名冊姓名"></div>
+          <div class="modal-actions-row" style="margin-top:22px;">
+            <button type="button" class="secondary-btn" onclick="backToStudentQuery('studentProfileModal')">返回查詢</button>
             <button type="button" class="primary-btn gold-bg big-btn" onclick="handleRegistrationSubmit()">🚀 確認並開始闖關</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 查無名冊：訪客體驗 -->
+    <div id="studentGuestModal" class="game-modal">
+      <div class="modal-card">
+        <div class="modal-header"><span class="modal-badge">👤 訪客體驗</span><h3>此學習帳號不在名冊中</h3></div>
+        <div class="modal-body text-center">
+          <p class="auth-subtext">查不到這個學習帳號。可以用訪客模式體驗六道關卡與證書畫面，但成績不會記錄到資料庫，也不能由教師核對。</p>
+          <div class="modal-actions-row" style="margin-top:22px;">
+            <button type="button" class="secondary-btn" onclick="backToStudentQuery('studentGuestModal')">返回查詢</button>
+            <button type="button" class="primary-btn gold-bg big-btn" onclick="startGuestMode()">👤 以訪客模式體驗</button>
           </div>
         </div>
       </div>
@@ -473,7 +525,12 @@
 
   <footer class="app-footer"><p>國中歷史二上 108 課綱數位互動學習網頁 ｜ 配合課文講義複習設計</p></footer>
 
-  <script src="app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <script src="../firebase-service.js"></script>
+  <script src="app.js?v=20260922-login1"></script>
   <script src="mage-maze.js"></script>
 </body>
 </html>
