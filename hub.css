@@ -230,7 +230,7 @@ h1, h2, h3, .zone-title, .card-title, .hub-subtitle, .soon-badge,
 
 .open-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 28px;
   align-items: stretch;
 }
@@ -317,6 +317,38 @@ h1, h2, h3, .zone-title, .card-title, .hub-subtitle, .soon-badge,
 .dynasty-enter:hover {
   background: #e0b46a;
   color: #2a2420;
+}
+
+/* ---- 第二課：民族與文化（青碧主題） ---- */
+.cai-card.culture-card {
+  background:
+    radial-gradient(circle at 14% 10%, rgba(46, 196, 182, 0.20), transparent 40%),
+    linear-gradient(135deg, #f2fdfb 0%, #e1f3ff 100%);
+  border-color: var(--teal-deep);
+  transform: rotate(0.6deg);
+  animation-delay: 0.4s;
+}
+
+.cai-card.culture-card:hover {
+  transform: rotate(0deg) translateY(-6px);
+  box-shadow: 8px 12px 0 rgba(23, 169, 156, 0.85);
+}
+
+.culture-card .featured-emoji {
+  background: var(--teal);
+  border-color: var(--teal-deep);
+  box-shadow: 3px 4px 0 rgba(23, 169, 156, 0.5);
+}
+
+.culture-card .chapter-number {
+  background: var(--sky);
+  color: var(--white);
+  border-color: var(--ink);
+}
+
+.culture-card .pill-item {
+  background: #f2fdff;
+  border-color: var(--teal-deep);
 }
 
 .ribbon {
@@ -469,7 +501,7 @@ h1, h2, h3, .zone-title, .card-title, .hub-subtitle, .soon-badge,
 
 .soon-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
   margin-top: 20px;
 }
@@ -556,6 +588,12 @@ h1, h2, h3, .zone-title, .card-title, .hub-subtitle, .soon-badge,
 }
 
 /* ================= 響應式微調 ================= */
+/* 平板：兩欄，最後一張卡片橫跨整列，避免右側留空 */
+@media (max-width: 1099px) {
+  .open-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .open-grid > .cai-card:last-child { grid-column: 1 / -1; }
+}
+
 @media (max-width: 768px) {
   .hub-header { padding-top: 40px; }
   .cai-card { padding: 22px; }
