@@ -9,6 +9,7 @@
     "final balance score 20400",
     "failed submission retry with same ID",
     "successful submission not duplicated",
+    "relogin resumes saved score with same ID",
     "mobile layout"
   ],
   "errors": []
