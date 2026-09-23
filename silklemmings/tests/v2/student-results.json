@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "checks": [
+    "entry login gate",
+    "unknown roster guest option",
+    "guest sends no scores",
+    "roster class and seat",
+    "alias confirmation",
+    "final balance score 20400",
+    "failed submission retry with same ID",
+    "successful submission not duplicated",
+    "mobile layout"
+  ],
+  "errors": []
+}

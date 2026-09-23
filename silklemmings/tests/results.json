@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "fourthChapterLegs": 22,
+  "checks": [
+    "default stationed defenders protect all four routes",
+    "cargo bought and sold through real UI",
+    "archer shield formation survives merchant passage",
+    "capture settlement",
+    "net profit 10000",
+    "saved progress",
+    "death retry",
+    "mobile layout"
+  ],
+  "errors": []
+}

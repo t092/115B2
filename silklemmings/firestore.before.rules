@@ -14,21 +14,19 @@ service cloud.firestore {
         && request.resource.data.unitName in [
           'G2B3',
           'G2B3L21',
-          'DynaSoKOBAN',
-          'silklemmings'
+          'DynaSoKOBAN'
         ]
         && request.resource.data.status == 'pending_review'
-        && (request.resource.data.unitName != 'silklemmings' || (request.resource.data.completed == true && request.resource.data.bonusScore == 0 && request.resource.data.score == request.resource.data.totalScore))
         && request.resource.data.baseScore is int
         && request.resource.data.baseScore >= 0
-        && request.resource.data.baseScore <= (request.resource.data.unitName == 'silklemmings' ? 9007199254740991 : 1000)
+        && request.resource.data.baseScore <= 1000
         && request.resource.data.bonusScore is int
         && request.resource.data.bonusScore >= 0
         && request.resource.data.bonusScore <= 150
         && (request.resource.data.bonusScore == 0 || request.resource.data.hiddenLevelCompleted == true)
         && request.resource.data.totalScore is int
         && request.resource.data.totalScore >= 0
-        && request.resource.data.totalScore <= (request.resource.data.unitName == 'silklemmings' ? 9007199254740991 : 1000)
+        && request.resource.data.totalScore <= 1000
         && request.resource.data.totalScore == request.resource.data.baseScore + request.resource.data.bonusScore
         && request.resource.data.hiddenLevelUnlocked is bool
         && request.resource.data.hiddenLevelCompleted is bool
@@ -46,11 +44,7 @@ service cloud.firestore {
 
       // 成績包含個資，第一階段不直接開放查詢排行榜。
       // 排行榜應改由教師核對後的安全彙總資料提供。
-      // Only the submitting session may verify its own Silk Road receipt.
-      allow get: if request.auth != null
-        && resource.data.unitName == 'silklemmings'
-        && resource.data.uid == request.auth.uid;
-      allow list: if false;
+      allow read: if false;
 
       allow update, delete: if false;
     }

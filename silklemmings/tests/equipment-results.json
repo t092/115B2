@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "moving horse equipment",
+    "stopped camel equipment and explicit resume",
+    "sand and tornado preserve cargo and health",
+    "reusable through second trap",
+    "individual and hazard-specific protection",
+    "no cargo capacity cost",
+    "mobile layout"
+  ],
+  "errors": []
+}
