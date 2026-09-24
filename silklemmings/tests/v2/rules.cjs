@@ -1,7 +1,8 @@
+// Fixed economy fixtures exclude random encounters; enemies.cjs verifies those separately.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const E=require('../../battle-engine.js');let checks=[];
 const check=(v,t)=>{assert.ok(v,t);checks.push(t);};
-const make=s=>{const b=new E.Battle({...E.initial(),...s});b.begin();return b;};
+const make=s=>{const b=new E.Battle({...E.initial(),enemyClock:{crow:1e6,worm:1e6},...s});b.begin();return b;};
 let timed=make({chapter:1});timed.step(40);check(timed.phase==='running','Second chapter continues beyond forty seconds');timed.step(20);check(timed.time===60&&timed.phase==='finished','Second chapter ends at sixty');let b=make();check(b.state.money===5000,'First chapter begins with 5000');check(!b.spawn('imports').ok,'Chang’an rejects imports horse');
 let a=b.spawn('silk').unit;check(a.x===1000&&a.goods===5&&a.hp===60,'Horse always spawns at right boundary with five goods');b.step(.1);check(a.x<1000,'Movement is right to left');check(b.state.money===4900,'Purchase deducted immediately');
 check(!b.spawn('silk').ok,'Spawn cooldown enforced');b.step(.6);check(b.spawn('silk').ok,'Cooldown expires in simulation time');
@@ -16,11 +17,9 @@ b=make({chapter:1});guard=b.spawn('shield').unit;guard.x=675;guard.stopped=true;
 b=make();a=b.spawn('sand').unit;b.step(3);check(a.guardId===0&&a.stopped&&a.x>800,'Matching camel automatically stops before hazard');
 b=make();a=b.spawn('silk').unit;a.x=1;b.step(.02);check(b.pending===300&&b.state.money===4900,'Passage only creates pending income');check(b.deliveries[0].goods===5,'Delivery ledger records goods');check(b.settle()===null,'Timed stage cannot settle early');b.step(39.98);check(b.time===40&&b.phase==='finished','Timer finishes at exactly 40');const r=b.settle();check(r.revenue===300&&r.passed===1&&b.state.money===5200,'End-of-stage credits only delivered cargo');check(b.settle()===null&&b.state.money===5200,'Settlement is idempotent');check(b.advance().money===5200&&b.advance().chapter===1,'Balance carries to next chapter');
 b=make();b.step(39);a=b.spawn('silk').unit;b.step(1);check(b.settle().revenue===0,'Undelivered last-second cargo earns nothing');const x=a.x;b.step(10);check(a.x===x,'Nothing moves or earns after timeout');
-b=make({chapter:3,baseline:1000});b.step(61);check(b.phase==='running'&&b.time>60,'Chapter four has no sixty-second timeout');a=b.spawn('silk').unit;a.x=1;b.step(.02);check(b.canSettle(),'Fourth chapter permits settled arrivals');b.settle();let next=b.advance();check(next.leg==='back'&&E.routeFor(next).origin==='大秦'&&E.available(next,'imports')&&!E.available(next,'silk'),'Round trip switches city and available cargo');
 // Full normal movement playthrough. No forced positions, HP edits or trap removal.
 function tradeRound(state,n=5){const b=make(state);const jobs=[];const count={};for(const h of b.hazards){const k=h.type==='archer'?'shield':h.type;const index=count[k]||0;count[k]=index+1;jobs.push({at:index*.8,key:k});}const key=b.route.origin==='長安'?'silk':'imports';for(let i=0;i<n;i++)jobs.push({at:13+i*.8,key});jobs.sort((a,b)=>a.at-b.at);let i=0;for(let t=0;t<60;t+=.025){while(i<jobs.length&&jobs[i].at<=b.time+1e-7){const result=b.spawn(jobs[i++].key);assert.ok(result.ok,JSON.stringify({state,money:b.state.money,result}));}b.step(.025);if(b.phase==='finished'||(state.chapter===3&&i===jobs.length&&b.canSettle()))break;}if(state.chapter===3)assert.ok(b.canSettle()||b.phase==='finished');const report=b.settle();assert.ok(report.passed>0,JSON.stringify(report));return {state:b.advance(),report};}
 let state=E.initial(),reports=[];for(let i=0;i<3;i++){const result=tradeRound(state);reports.push(result.report);state=result.state;}
 check(state.chapter===3&&state.money>1000,'Three timed chapters can be completed with actual single-tool movement');
-let legs=0;while(!state.won&&legs<20){const result=tradeRound(state,15);reports.push(result.report);state=result.state;legs++;}
-check(state.won&&state.money-state.baseline>=10000,'Real purchases and trade achieve 10000 net profit');
-const result={passed:true,checks,legs,journey:reports};fs.writeFileSync(path.join(__dirname,'rules-results.json'),JSON.stringify(result,null,2));console.log(JSON.stringify({passed:true,checks:checks.length,legs,finalMoney:state.money}));
+require('./fixed-fourth.cjs');
+console.log(JSON.stringify({passed:true,checks:checks.length,journey:reports}));

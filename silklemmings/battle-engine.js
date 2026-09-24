@@ -20,7 +20,7 @@ function routeFor(s){const r=ROUTES[s.chapter];return s.chapter===3&&s.leg==='ba
 function available(s,key){return !!TYPES[key]&&(!TYPES[key].goods||(routeFor(s).origin==='長安'?key==='silk':key==='imports'));}
 function canSell(s,key){return available(s,key)&&!(key==='silk'&&routeFor(s).destination==='長安');}
 class Battle{
- constructor(state){this.state={...state};this.startState={...state};this.route=routeFor(state);this.time=0;this.timeLimit=state.chapter===0?40:state.chapter<3?60:Math.max(0,180-(state.fourthElapsed||0));this.phase='ready';this.units=[];this.hazards=this.route.hazards.map(([x,type],id)=>({x,type,id,nextShot:0,shot:null}));this.pending=0;this.deliveries=[];this.spent=0;this.losses=0;this.nextId=1;this.cooldown={};this.events=[];this.settled=false;}
+ constructor(state){this.state={...state};this.startState={...state};this.route=routeFor(state);this.time=state.chapter===3?(state.fourthElapsed||0):0;this.timeLimit=state.chapter===0?40:state.chapter<3?60:180;this.phase='ready';this.units=[];this.hazards=this.route.hazards.map(([x,type],id)=>({x,type,id,nextShot:0,shot:null}));this.pending=0;this.deliveries=[];this.spent=0;this.losses=0;this.nextId=1;this.cooldown={};this.events=[];this.settled=false;this.enemies=[];this.enemyClock={...(state.enemyClock||{crow:8+Math.random()*4,worm:13+Math.random()*4})};}
  begin(){if(this.phase==='ready'){this.phase='running';if(this.state.ended)this.phase='result';}}
  notify(text){this.events.push(text);if(this.events.length>20)this.events.shift();}
  spawn(key){const t=TYPES[key];if(this.phase!=='running')return {ok:false,reason:'旅程尚未開始或已結束。'};if(!available(this.state,key))return {ok:false,reason:'這座城市沒有提供這種商品馬。'};if(this.state.money<t.cost)return {ok:false,reason:'經費不足，請保留足夠預算。'};if((this.cooldown[key]||0)>this.time+1e-8)return {ok:false,reason:'此種夥伴正在出發，稍候即可再次購買。'};if(this.units.filter(a=>a.alive&&!a.arrived).length>=45)return {ok:false,reason:'路上商隊已滿，請等候夥伴通過。'};
@@ -30,6 +30,35 @@ class Battle{
  kill(a,reason){if(!a.alive)return;a.alive=false;a.hp=0;a.goods=0;a.gear=null;a.stopped=false;a.guardId=null;this.losses++;this.notify(`${TYPES[a.key].name}${reason}，裝備與貨物一同消失。`);}
  hurt(a,n,reason){a.hp=Math.max(0,a.hp-n);if(a.hp<1e-8)this.kill(a,reason);}
  toggle(id){const a=this.units.find(u=>u.id===id);if(!a||!a.alive||a.arrived||TYPES[a.key].animal!=='camel'||this.phase!=='running')return false;if(a.guardId!=null){this.notify('駐守駱駝正在支援商隊，會留守至生命耗盡。');return false;}a.manualStop=!a.manualStop;a.stopped=a.manualStop;return true;}
+ spawnEnemy(kind){
+  const e={kind,age:0,x:kind==='worm'?45+Math.random()*100:150+Math.random()*700,startX:0,y:0,target:null,hit:false,carried:null};
+  e.startX=e.x;this.enemies.push(e);this.notify(kind==='crow'?'驚盗鴉現身！優先抓走商品馬與貨物。':'終點附近出現沙蟲！小心商品馬。');return e;
+ }
+ updateEnemies(dt){
+  if(this.state.chapter!==3)return;
+  for(const kind of ['crow','worm']){this.enemyClock[kind]-=dt;if(this.enemyClock[kind]<=0){this.spawnEnemy(kind);this.enemyClock[kind]+=kind==='crow'?8+Math.random()*4:13+Math.random()*4;}}
+  this.state.enemyClock={...this.enemyClock};
+  const active=a=>a.alive&&!a.arrived&&a.x>0;
+  for(const e of this.enemies){e.age+=dt;
+   if(e.kind==='crow'){
+    if(!e.hit&&e.age>=.6){
+     const candidates=this.units.filter(active),horses=candidates.filter(a=>TYPES[a.key].animal==='horse');
+     const pool=horses.length?horses:candidates;
+     let target=pool.find(a=>a.id===e.target);
+     if(!target&&pool.length)target=pool[Math.floor(Math.random()*pool.length)];
+     e.target=target?.id??null;
+     if(target){const p=Math.min(1,(e.age-.6)/1.2);e.x=e.startX+(target.x-e.startX)*p;e.y=p;
+      if(p>=1){e.hit=true;e.departAt=e.age;if(TYPES[target.key].animal==='horse'){e.carried=target.key;this.kill(target,'被驚盗鴉抓走');}else{this.hurt(target,30,'被驚盗鴉啄倒');this.notify('驚盗鴉攻擊駱駝，造成 30 點傷害。');}}
+     }else{e.hit=true;e.departAt=e.age;}
+    }
+    if(e.hit){e.y=Math.max(-.4,e.y-dt*.8);e.x+=dt*160;}
+   }else if(!e.hit&&e.age>=.7&&e.age<4.5){
+    const horse=this.units.filter(a=>active(a)&&TYPES[a.key].animal==='horse'&&Math.abs(a.x-e.x)<65).sort((a,b)=>Math.abs(a.x-e.x)-Math.abs(b.x-e.x))[0];
+    if(horse){e.hit=true;e.biteAt=e.age;this.kill(horse,'被沙蟲吞噬');}
+   }
+  }
+  this.enemies=this.enemies.filter(e=>e.kind==='crow'?e.age<(e.departAt??3)+2:e.age<5.2);
+ }
  tick(dt){this.time+=dt;
   // Movement is resolved for everyone before protection and incoming damage.
   for(const a of this.units){if(!a.alive||a.arrived||a.stopped)continue;const t=TYPES[a.key],next=a.x-t.speed*dt;
@@ -42,11 +71,29 @@ class Battle{
   for(const h of this.hazards.filter(h=>h.type!=='archer'))for(const a of this.units){if(!a.alive||a.arrived||a.gear!==h.type)continue;if(a.guardId===h.id||Math.abs(a.x-h.x)<=RADIUS)this.hurt(a,HP_DPS[h.type]*dt,'在陷阱中耗盡生命');}
   for(const h of this.hazards.filter(h=>h.type==='archer')){if(this.time+1e-8<h.nextShot)continue;const targets=this.units.filter(a=>a.alive&&!a.arrived&&Math.abs(a.x-h.x)<=ARROW_RANGE).sort((a,b)=>Number(b.gear==='archer')-Number(a.gear==='archer')||Math.abs(a.x-h.x)-Math.abs(b.x-h.x)||a.id-b.id);if(targets.length){const a=targets[0];h.nextShot=this.time+1;h.shot={x:a.x,time:this.time,target:a.id};this.hurt(a,10,'被弓箭擊倒');}}
   for(const h of this.hazards.filter(h=>h.type!=='archer')){const guarded=this.guard(h).length>0;for(const a of this.units)if(a.alive&&!a.arrived&&Math.abs(a.x-h.x)<=RADIUS&&a.gear!==h.type&&!guarded)this.kill(a,'未受保護而陷入險境');}
+  this.updateEnemies(dt);
   for(const a of this.units){if(!a.alive||a.arrived||a.x>0)continue;a.x=0;a.arrived=true;if(a.goods>0&&canSell(this.state,a.key)){const value=TYPES[a.key].sale;this.pending+=value;this.deliveries.push({id:a.id,key:a.key,goods:a.goods,value,time:this.time});this.notify(`${TYPES[a.key].name}通過！${value} 元列入本趟待結算收入。`);}a.goods=0;}
  }
- step(dt){if(this.phase!=='running'||!Number.isFinite(dt)||dt<=0)return;let left=Math.min(dt,Math.max(0,this.timeLimit-this.time));while(left>1e-9){const n=Math.min(.025,left);this.tick(n);left-=n;if(this.state.chapter===3&&this.state.leg==='back'&&this.deliveries.length>0&&this.state.money+this.pending-this.state.baseline>=10000){this.endReason='goal';this.phase='finished';break;}}if(this.state.chapter===3)this.state.fourthElapsed=Math.min(180,(this.startState.fourthElapsed||0)+this.time);if(this.time>=this.timeLimit-1e-8){this.time=this.timeLimit;this.phase='finished';this.endReason=this.endReason||'timeout';}}
- canSettle(){return this.state.chapter===3&&this.phase==='running'&&this.deliveries.length>0&&!this.units.some(a=>a.alive&&!a.arrived&&TYPES[a.key].goods);}
- settle(){if(this.settled)return null;if(this.phase!=='finished'&&!this.canSettle())return null;this.settled=true;this.phase='result';this.state.money+=this.pending;if(this.state.chapter===3){const prev=this.startState.fourthTotals||{passed:0,goods:0,spent:0,revenue:0};this.state.fourthTotals={passed:prev.passed+this.deliveries.length,goods:prev.goods+this.deliveries.reduce((n,a)=>n+a.goods,0),spent:prev.spent+this.spent,revenue:prev.revenue+this.pending};if(this.endReason){this.state.ended=true;this.state.won=this.state.leg==='back'&&this.deliveries.length>0&&this.state.money-this.state.baseline>=10000;this.state.finalScore=this.state.money;}}const report={chapter:this.state.chapter,origin:this.route.origin,destination:this.route.destination,starting:this.startState.money,spent:this.spent,passed:this.deliveries.length,goods:this.deliveries.reduce((s,a)=>s+a.goods,0),revenue:this.pending,balance:this.state.money,losses:this.losses,undelivered:this.units.filter(a=>a.alive&&!a.arrived&&TYPES[a.key].goods).length};return report;}
+ turnBack(){
+  this.state.money+=this.pending;this.pending=0;
+  this.outboundUnfinished=this.units.filter(a=>a.alive&&!a.arrived&&TYPES[a.key].goods).length;
+  this.units=[];this.enemies=[];this.cooldown={};this.state.leg='back';this.route=routeFor(this.state);
+  this.hazards=this.route.hazards.map(([x,type],id)=>({x,type,id,nextShot:this.time,shot:null}));
+  this.notify(`90 秒到！西行收入已入帳，${this.outboundUnfinished} 匹未抵達商品馬不計收入。已自動改為大秦 → 長安，請重新派出守護駱駝與葡萄・琵琶馬。`);
+ }
+ step(dt){
+  if(this.phase!=='running'||!Number.isFinite(dt)||dt<=0)return;
+  let left=Math.min(dt,Math.max(0,this.timeLimit-this.time));
+  while(left>1e-9){
+   if(this.state.chapter===3&&this.state.leg==='out'&&this.time>=90-1e-8){this.time=90;this.turnBack();}
+   const boundary=this.state.chapter===3&&this.state.leg==='out'?90:this.timeLimit;
+   const n=Math.min(.025,left,boundary-this.time);this.tick(n);left-=n;
+  }
+  if(this.state.chapter===3){if(this.state.leg==='out'&&this.time>=90-1e-8){this.time=90;this.turnBack();}this.state.fourthElapsed=Math.min(180,this.time);}
+  if(this.time>=this.timeLimit-1e-8){this.time=this.timeLimit;this.phase='finished';this.endReason='timeout';}
+ }
+ canSettle(){return false;}
+ settle(){if(this.settled)return null;if(this.phase!=='finished'&&!this.canSettle())return null;this.settled=true;this.phase='result';this.state.money+=this.pending;if(this.state.chapter===3){const prev=this.startState.fourthTotals||{passed:0,goods:0,spent:0,revenue:0};this.state.fourthTotals={passed:prev.passed+this.deliveries.length,goods:prev.goods+this.deliveries.reduce((n,a)=>n+a.goods,0),spent:prev.spent+this.spent,revenue:prev.revenue+this.deliveries.reduce((n,a)=>n+a.value,0)};if(this.endReason){this.state.ended=true;this.state.won=this.state.leg==='back'&&this.deliveries.some(a=>a.key==='imports')&&this.state.money-this.state.baseline>=10000;this.state.finalScore=this.state.money;}}const report={chapter:this.state.chapter,origin:this.route.origin,destination:this.route.destination,starting:this.startState.money,spent:this.spent,passed:this.deliveries.length,goods:this.deliveries.reduce((s,a)=>s+a.goods,0),revenue:this.pending,balance:this.state.money,losses:this.losses,undelivered:this.units.filter(a=>a.alive&&!a.arrived&&TYPES[a.key].goods).length};return report;}
  advance(){if(!this.settled)return null;const s={...this.state};if(s.chapter<3){s.chapter++;if(s.chapter===3){s.baseline=s.money;s.fourthElapsed=0;s.fourthTotals={passed:0,goods:0,spent:0,revenue:0};}}else{if(s.ended)return s;if(s.leg==='back'&&s.money-s.baseline>=10000)s.won=true;s.leg=s.leg==='out'?'back':'out';if(s.leg==='out')s.round++;}return s;}
 }
 const api={TYPES,ROUTES,initial,routeFor,available,canSell,Battle,HP_DPS,ARROW_RANGE,RADIUS};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.SilkBattle=api;

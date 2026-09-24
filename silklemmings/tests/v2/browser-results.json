@@ -1,7 +1,7 @@
 {
   "passed": true,
   "checks": [
-    "six sprite sheets including archer loaded from local files",
+    "eight sprite sheets including enemies and archer loaded from local files",
     "no preparation sidebar",
     "origin-specific visible cards",
     "single click purchase",
