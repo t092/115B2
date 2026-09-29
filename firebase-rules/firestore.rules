@@ -61,9 +61,8 @@ service cloud.firestore {
 
       // 成績包含個資，第一階段不直接開放查詢排行榜。
       // 排行榜應改由教師核對後的安全彙總資料提供。
-      // Only the submitting session may verify its own Silk Road receipt.
+      // A submitting session may verify only its own receipt after an ambiguous write/retry.
       allow get: if isTeacher() || (request.auth != null
-        && resource.data.unitName == 'silklemmings'
         && resource.data.uid == request.auth.uid);
       allow list: if isTeacher();
 

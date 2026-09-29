@@ -127,6 +127,10 @@
       return { status: 'guest', message: '免登入體驗模式不記錄正式成績' };
     }
 
+    let submissionRef = null;
+    let submissionId = '';
+    let expectedClientSubmissionId = '';
+    let expectedPayload = null;
     try {
       assertConfigured();
       const user = await ensureSession();
@@ -137,7 +141,9 @@
       }
 
       const clientSubmissionId = data.clientSubmissionId || crypto.randomUUID();
-      const submissionId = `${user.uid}_${data.unitId}_${clientSubmissionId}`;
+      expectedClientSubmissionId = clientSubmissionId;
+      submissionId = `${user.uid}_${data.unitId}_${clientSubmissionId}`;
+      submissionRef = db.collection('scores').doc(submissionId);
       const score = Number(data.score ?? data.totalScore ?? 0);
       const baseScore = Number(data.baseScore ?? score);
       const bonusScore = Number(data.bonusScore ?? 0);
@@ -171,10 +177,30 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+      expectedPayload = payload;
 
-      await db.collection('scores').doc(submissionId).set(payload, { merge: false });
+      await submissionRef.set(payload, { merge: false });
       return { status: 'success', submissionId, identityStatus: 'self_declared' };
     } catch (error) {
+      // 若上次寫入已到達 Firestore，但瀏覽器未收到成功回應，確認同一份回執，避免重試被誤報或新增重複成績。
+      if (submissionRef && submissionId) {
+        try {
+          const receipt = await submissionRef.get();
+          const saved = receipt.exists ? receipt.data() : null;
+          if (saved && saved.uid === getUid()
+            && saved.unitName === data.unitId
+            && saved.clientSubmissionId === expectedClientSubmissionId
+            && saved.email === expectedPayload.email
+            && saved.class === expectedPayload.class
+            && saved.seat === expectedPayload.seat
+            && saved.totalScore === expectedPayload.totalScore
+            && saved.completed === expectedPayload.completed) {
+            return { status: 'success', submissionId, identityStatus: saved.identityStatus || 'self_declared', duplicate: true };
+          }
+        } catch (receiptError) {
+          // 保留原始寫入錯誤，供頁面顯示及重試。
+        }
+      }
       console.warn('[Firebase] 成績寫入失敗。', error);
       return { status: 'error', message: error.message || '無法連線至 Firebase' };
     }

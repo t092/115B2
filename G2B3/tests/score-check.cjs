@@ -74,22 +74,25 @@ test('GAS validates score fields, protects sheet text and deduplicates retries',
 function frontend(fetch) {
   const elements = new Map();
   const firebaseCalls = [];
+  const localValues = new Map();
+  let submitResult = {status:'success'};
   const firebaseService = {
     isConfigured:()=>true,
-    submitScore:async data=>{firebaseCalls.push(data);return {status:'success'};}
+    submitScore:async data=>{firebaseCalls.push(data);return submitResult;}
   };
-  const context = vm.createContext({crypto,fetch,AbortController,setTimeout,clearTimeout,
+  const context = vm.createContext({crypto,fetch,AbortController,setTimeout,clearTimeout,clearInterval,
     atob:value=>Buffer.from(value,'base64').toString('binary'),
     FirebaseService:firebaseService,
+    localStorage:{getItem:key=>localValues.get(key)||null,setItem:(key,value)=>localValues.set(key,value)},
     window:{addEventListener(){},FirebaseService:firebaseService},document:{getElementById:id=>{
-      if(!elements.has(id)) elements.set(id,{}); return elements.get(id);
+      if(!elements.has(id)) elements.set(id,{classList:{add(){}}}); return elements.get(id);
     }},console});
   vm.runInContext(read('app.js'),context);
   vm.runInContext('gameState.challenge.completed=true; gameState.student.registered=true; gameState.student.email="student@st.tc.edu.tw";',context);
-  return {context,elements,firebaseCalls};
+  return {context,elements,firebaseCalls,localValues,setSubmitResult:value=>{submitResult=value;}};
 }
 test('upload sends the unified score shape to Firebase',async()=>{
-  const {context,elements,firebaseCalls} = frontend(async()=>{});
+  const {context,elements,firebaseCalls,localValues} = frontend(async()=>{});
   await context.uploadScoreToGAS();
   assert.match(elements.get('certCloudSyncPill').className,/success/);
   assert.equal(firebaseCalls.length,1);
@@ -97,10 +100,59 @@ test('upload sends the unified score shape to Firebase',async()=>{
     Object.fromEntries(['classId','seatNo','email'].map(key => [key, firebaseCalls[0].profile[key]])),
     {classId:'201',seatNo:'1',email:'student@st.tc.edu.tw'}
   );
+  assert.ok(firebaseCalls[0].clientSubmissionId);
+  assert.equal(localValues.get('CAI_G2B3_PENDING_SCORES_V1'),'[]');
 });
 test('guest mode does not submit a formal score',async()=>{
   const {context,firebaseCalls} = frontend(async()=>{});
   vm.runInContext('gameState.student.registered=false;',context);
   await context.uploadScoreToGAS();
-  assert.equal(firebaseCalls[0].isGuest,true);
+  assert.equal(firebaseCalls.length,0);
+});
+test('failed completion is retained and a retry reuses the same submission ID',async()=>{
+  const {context,elements,firebaseCalls,localValues,setSubmitResult} = frontend(async()=>{});
+  setSubmitResult({status:'error',message:'網路中斷'});
+  await context.uploadScoreToGAS();
+  const pending = JSON.parse(localValues.get('CAI_G2B3_PENDING_SCORES_V1'));
+  assert.equal(pending.length,1);
+  assert.match(elements.get('certCloudSyncText').innerText,/暫存在此裝置/);
+
+  setSubmitResult({status:'success'});
+  await context.uploadScoreToGAS();
+  assert.equal(firebaseCalls.length,2);
+  assert.equal(firebaseCalls[0].clientSubmissionId,firebaseCalls[1].clientSubmissionId);
+  assert.equal(localValues.get('CAI_G2B3_PENDING_SCORES_V1'),'[]');
+});
+test('automatic submission runs at whole-challenge completion with the final award included',async()=>{
+  const {context,elements,firebaseCalls} = frontend(async()=>{});
+  vm.runInContext('updateCertificate=()=>{}; sounds.fanfare=()=>{}; gameState.challenge.completed=false; gameState.score=125;',context);
+  context.completeAllChallenges(false);
+  await new Promise(resolve=>setTimeout(resolve,0));
+  assert.equal(elements.get('finalTotalScore').innerText,'175 分');
+  assert.equal(firebaseCalls.length,1);
+  assert.equal(firebaseCalls[0].score,175);
+  assert.equal(firebaseCalls[0].completed,true);
+});
+
+test('Firestore retry recognizes an already-created receipt instead of duplicating it',async()=>{
+  const documents = new Map();
+  const firebase = {
+    apps:[],
+    initializeApp:()=>({}),
+    auth:()=>({currentUser:{uid:'session-1',isAnonymous:true}}),
+    firestore:()=>({collection:()=>({doc:id=>({
+      set:async data=>{if(documents.has(id))throw new Error('already exists');documents.set(id,data);},
+      get:async()=>({exists:documents.has(id),data:()=>documents.get(id)})
+    })})})
+  };
+  firebase.firestore.FieldValue={serverTimestamp:()=>({serverTimestamp:true})};
+  const context=vm.createContext({firebase,crypto,console,CAI_FIREBASE_CONFIG:{apiKey:'x',authDomain:'x',projectId:'x',appId:'x'},CAI_FIREBASE_OPTIONS:{anonymousSession:true}});
+  context.window=context;
+  vm.runInContext(fs.readFileSync(path.resolve(root,'..','firebase-service.js'),'utf8'),context);
+  const payload={unitId:'G2B3',clientSubmissionId:'fixed-id',profile:{classId:'201',seatNo:'1',name:'學生',email:'student@st.tc.edu.tw',registered:true},score:175,completed:true};
+  assert.equal((await context.FirebaseService.submitScore(payload)).status,'success');
+  const retry=await context.FirebaseService.submitScore(payload);
+  assert.equal(retry.status,'success');
+  assert.equal(retry.duplicate,true);
+  assert.equal(documents.size,1);
 });

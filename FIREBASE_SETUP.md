@@ -33,6 +33,8 @@ window.CAI_FIREBASE_CONFIG = {
 3. 將 `firebase-rules/firestore.rules` 內容部署至 Firestore Rules。
 4. 先使用測試帳號驗證寫入與排行榜。
 
+成績送出後若瀏覽器未收到成功回應，遊戲會以固定提交 ID 重試，並讀取該學生自己的成績文件確認是否已寫入。Firestore Rules 的 `scores/{scoreId}` 因此允許使用者 `get` 自己的文件，仍禁止學生列出、更新或刪除成績。修改或部署新版規則後，請執行 `npx firebase deploy --only firestore:rules`。
+
 Firebase Anonymous Authentication 只是技術工作階段，不是學生身分認證。學生仍使用班級、座號、姓名與教師核對流程。
 
 ## 4. 匯入學習帳號名冊
@@ -73,6 +75,8 @@ email
 unitName
 totalScore
 ```
+
+G2B3 在全部五道主關卡完成後自動儲存。若網路或 Firebase 寫入失敗，待送成績會暫存於該瀏覽器七天；同一名冊帳號重新開啟頁面時，系統會恢復成績並重試。成功確認後會移除本機暫存。
 
 ## 6. 教師管理帳號
 

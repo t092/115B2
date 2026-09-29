@@ -10,7 +10,7 @@ const {pathToFileURL} = require('node:url');
     await page.route('https://**/*',route=>route.abort());
     await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href,{waitUntil:'domcontentloaded'});
     await page.evaluate(()=>{sounds.enabled=false;gameState.challenge.completed=true;gameState.score=125;goToUnit('tab-summary');});
-    assert.match(await page.locator('#certCloudSyncText').innerText(),/Firebase/);
+    assert.match(await page.locator('#certCloudSyncText').innerText(),/自動儲存/);
     await page.evaluate(()=>{
       window.FirebaseService={
         isConfigured:()=>true,
@@ -19,6 +19,8 @@ const {pathToFileURL} = require('node:url');
       gameState.student.registered=true;
       gameState.student.email='student@st.tc.edu.tw';
     });
+    assert.ok(await page.locator('#saveScoreButton').evaluate(button=>button.getBoundingClientRect().height>=60));
+    assert.ok(await page.locator('#saveScoreButton').evaluate(button=>button.classList.contains('score-save-btn')));
     await page.getByRole('button',{name:/儲存成績至 Firebase/}).click();
     await page.waitForTimeout(50);
     assert.match(await page.locator('#certCloudSyncText').innerText(),/等待教師核對/);

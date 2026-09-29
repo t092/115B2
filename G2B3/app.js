@@ -124,9 +124,13 @@ const gameState = {
     timer: null,
     seconds: 0,
     currentStage: 1,
-    completed: false
+    completed: false,
+    submissionId: ''
   }
 };
+
+const PENDING_SCORE_STORAGE_KEY = 'CAI_G2B3_PENDING_SCORES_V1';
+const PENDING_SCORE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 function formatTime(totalSec) {
   const mins = Math.floor(totalSec / 60);
@@ -246,70 +250,160 @@ const stageNames = [
 ];
 
 function openScoreForm() {
-  if (window.FirebaseService && FirebaseService.isConfigured()) {
-    uploadScoreToGAS();
-    return;
-  }
-  alert('Firebase 尚未完成設定，暫時無法儲存成績。');
+  uploadScoreToGAS();
 }
 
 let scoreUploadInFlight = false;
-let scoreSubmissionId = '';
 let pendingG2B3Profile = null;
-async function uploadScoreToGAS() {
-  if (scoreUploadInFlight) return;
+
+function readPendingScoreRecords() {
+  try {
+    const records = JSON.parse(localStorage.getItem(PENDING_SCORE_STORAGE_KEY) || '[]');
+    if (!Array.isArray(records)) return [];
+    const valid = records.filter(record => record && record.createdAt
+      && Date.now() - Number(record.createdAt) < PENDING_SCORE_MAX_AGE_MS);
+    if (valid.length !== records.length) {
+      localStorage.setItem(PENDING_SCORE_STORAGE_KEY, JSON.stringify(valid));
+    }
+    return valid;
+  } catch (error) {
+    return [];
+  }
+}
+
+function writePendingScoreRecord(record) {
+  try {
+    const records = readPendingScoreRecords();
+    const next = records.filter(item => item.clientSubmissionId !== record.clientSubmissionId);
+    next.push(record);
+    localStorage.setItem(PENDING_SCORE_STORAGE_KEY, JSON.stringify(next));
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function removePendingScoreRecord(clientSubmissionId) {
+  try {
+    const records = readPendingScoreRecords().filter(record => record.clientSubmissionId !== clientSubmissionId);
+    localStorage.setItem(PENDING_SCORE_STORAGE_KEY, JSON.stringify(records));
+  } catch (error) {
+    // Firebase 已確認寫入時，本機清除失敗不影響正式成績；下次會以相同 ID 確認回執。
+  }
+}
+
+function makePendingScoreRecord() {
+  if (!gameState.challenge.submissionId) gameState.challenge.submissionId = crypto.randomUUID();
+  return {
+    clientSubmissionId: gameState.challenge.submissionId,
+    unitId: 'G2B3',
+    profile: {
+      classId: String(gameState.student.class || ''),
+      seatNo: String(gameState.student.seat || ''),
+      name: String(gameState.student.name || ''),
+      email: String(gameState.student.email || ''),
+      registered: gameState.student.registered === true,
+      rosterName: String(gameState.student.rosterName || '')
+    },
+    score: Number(gameState.score || 0),
+    stars: Number(gameState.stars || 0),
+    durationSeconds: Number(gameState.challenge.seconds || 0),
+    badges: Array.from(gameState.badges),
+    completed: true,
+    createdAt: Date.now()
+  };
+}
+
+function updateScoreSaveButton(status) {
+  const button = document.getElementById('saveScoreButton');
+  if (!button) return;
+  if (status === 'uploading') {
+    button.disabled = true;
+    button.textContent = '⏳ 正在儲存成績…';
+  } else if (status === 'success') {
+    button.disabled = true;
+    button.textContent = '☁️ 成績已儲存';
+  } else if (status === 'guest') {
+    button.disabled = true;
+    button.textContent = '👤 訪客成績不會登錄';
+  } else {
+    button.disabled = false;
+    button.textContent = '☁️ 重試儲存成績至 Firebase';
+  }
+}
+
+function updateScoreSaveStatus(status, icon, message) {
   const syncBox = document.getElementById('cloudSyncStatusBox');
   const syncText = document.getElementById('cloudSyncText');
   const syncIcon = document.getElementById('cloudSyncIcon');
   const certSyncText = document.getElementById('certCloudSyncText');
   const certSyncIcon = document.getElementById('certCloudSyncIcon');
   const certSyncPill = document.getElementById('certCloudSyncPill');
-
-  function updateStatus(status, icon, msg) {
-    if (syncBox) {
-      syncBox.className = `cloud-sync-status-box ${status}`;
-      if (syncIcon) syncIcon.innerText = icon;
-      if (syncText) syncText.innerText = msg;
-    }
-    if (certSyncPill) {
-      certSyncPill.className = `cloud-sync-status-box ${status}`;
-      if (certSyncIcon) certSyncIcon.innerText = icon;
-      if (certSyncText) certSyncText.innerText = msg;
-    }
+  if (syncBox) {
+    syncBox.className = `cloud-sync-status-box ${status}`;
+    if (syncIcon) syncIcon.innerText = icon;
+    if (syncText) syncText.innerText = message;
   }
+  if (certSyncPill) {
+    certSyncPill.className = `cloud-sync-status-box ${status}`;
+    if (certSyncIcon) certSyncIcon.innerText = icon;
+    if (certSyncText) certSyncText.innerText = message;
+  }
+  updateScoreSaveButton(status);
+}
 
-  if (!gameState.challenge.completed) return;
+async function uploadPendingScoreRecord(record, isPersisted = true) {
+  if (scoreUploadInFlight) return { status: 'uploading' };
+  scoreUploadInFlight = true;
+  updateScoreSaveStatus('uploading', '⏳', '正在儲存成績，請稍候…');
 
-  if (window.FirebaseService && FirebaseService.isConfigured()) {
-    updateStatus('uploading', '⏳', '正在儲存成績，請稍候...');
+  try {
+    if (!window.FirebaseService || !FirebaseService.isConfigured()) {
+      const message = isPersisted
+        ? 'Firebase 目前無法連線；成績已暫存在此裝置，請稍後重試。'
+        : 'Firebase 無法連線，且瀏覽器未能暫存成績；請保持頁面並稍後重試。';
+      updateScoreSaveStatus('error', '⚠️', message);
+      return { status: 'error', message };
+    }
+
     const result = await FirebaseService.submitScore({
-      unitId: 'G2B3',
-      profile: {
-        classId: gameState.student.class,
-        seatNo: gameState.student.seat,
-        name: gameState.student.name,
-        email: gameState.student.email,
-        registered: gameState.student.registered === true,
-        rosterName: gameState.student.rosterName
-      },
-      score: gameState.score,
-      stars: gameState.stars,
-      durationSeconds: gameState.challenge.seconds,
-      badges: Array.from(gameState.badges),
-      completed: true,
-      isGuest: gameState.student.registered !== true
+      ...record,
+      clientSubmissionId: record.clientSubmissionId,
+      isGuest: false
     });
     if (result.status === 'success') {
-      updateStatus('success', '☁️', '成績已送出，等待教師核對。');
-    } else if (result.status === 'guest') {
-      updateStatus('error', '👤', '目前是訪客模式，不會儲存正式成績。');
+      removePendingScoreRecord(record.clientSubmissionId);
+      updateScoreSaveStatus('success', '☁️', '成績已確認儲存，等待教師核對。');
     } else {
-      updateStatus('error', '⚠️', `成績儲存失敗：${result.message || '請稍後重試'}。`);
+      const message = `${result.message || '請確認網路後重試'}${isPersisted ? '；成績已暫存在此裝置。' : '；瀏覽器暫存失敗，請保持頁面並重試。'}`;
+      updateScoreSaveStatus('error', '⚠️', `成績尚未確認儲存：${message}`);
     }
     return result;
+  } catch (error) {
+    console.warn('[Score] 成績上傳失敗。', error);
+    const message = `成績尚未確認儲存：${error.message || '連線失敗'}${isPersisted ? '；已暫存在此裝置，請稍後重試。' : '；請保持頁面並重試。'}`;
+    updateScoreSaveStatus('error', '⚠️', message);
+    return { status: 'error', message };
+  } finally {
+    scoreUploadInFlight = false;
+  }
+}
+
+async function uploadScoreToGAS() {
+  if (scoreUploadInFlight) return { status: 'uploading' };
+  if (!gameState.challenge.completed) {
+    updateScoreSaveStatus('error', '⚠️', '請先完成全部五道主關卡，再儲存成績。');
+    return { status: 'incomplete' };
   }
 
-  updateStatus('error', '⚠️', 'Firebase 尚未完成設定，無法儲存成績。');
+  if (gameState.student.registered !== true) {
+    updateScoreSaveStatus('guest', '👤', '目前是訪客模式，成績不會記錄；請使用名冊學習帳號登入。');
+    return { status: 'guest' };
+  }
+
+  const record = makePendingScoreRecord();
+  const persisted = writePendingScoreRecord(record);
+  return uploadPendingScoreRecord(record, persisted);
 }
 
 function startFullChallenge() {
@@ -423,6 +517,8 @@ async function handleRegistrationSubmit(e) {
   updateCertificate();
   closeModal('studentProfileModal');
 
+  if (restorePendingScoresForStudent(profile)) return;
+
   if (gameState.challenge.completed) {
     await uploadScoreToGAS();
     goToUnit('tab-summary');
@@ -497,7 +593,11 @@ function completeAllChallenges(showModal = true) {
   if (gameState.challenge.completed) return;
   clearInterval(gameState.challenge.timer);
   gameState.challenge.completed = true;
+  gameState.challenge.submissionId = crypto.randomUUID();
   sounds.fanfare();
+
+  // 將全關獎勵納入總分後，再更新結算畫面與證書。
+  addPoints(50, 3, '歷史全貫通大宗師');
 
   const finalTime = formatTimeChinese(gameState.challenge.seconds);
   document.getElementById('finalTotalScore').innerText = `${gameState.score} 分`;
@@ -509,10 +609,11 @@ function completeAllChallenges(showModal = true) {
   }
   document.getElementById('finalEvaluation').innerText = evalText;
 
-  addPoints(50, 3, '歷史全貫通大宗師');
   if (showModal) document.getElementById('challengeCompleteModal').classList.add('show');
 
-  // Firebase 設定完成後，學生可從證書頁直接儲存成績；未設定時保留表單備援。
+  // 只在五道主關卡全部完成後自動送出，不在個別小關卡逐筆寫入。
+  if (gameState.student.registered) uploadScoreToGAS();
+  else updateScoreSaveStatus('guest', '👤', '訪客體驗已完成；正式成績僅會自動儲存名冊學習帳號的紀錄。');
 }
 
 // ==========================================
@@ -1188,6 +1289,58 @@ function updateCertificate() {
   document.getElementById('certDate').innerText = dateStr;
 }
 
+function restorePendingScoresForStudent(profileOverride = null) {
+  if (!window.FirebaseService) return false;
+  const profile = profileOverride || (typeof FirebaseService.getStudentProfile === 'function'
+    ? FirebaseService.getStudentProfile()
+    : null);
+  if (!profile || profile.registered !== true || !profile.email) return false;
+
+  const email = String(profile.email).trim().toLowerCase();
+  const pending = readPendingScoreRecords().filter(record =>
+    record.profile && String(record.profile.email || '').trim().toLowerCase() === email
+  );
+  if (!pending.length) return false;
+
+  // 重新整理後回到最近一筆未送達成績；其餘待送紀錄也會依序重試。
+  const latest = pending[pending.length - 1];
+  gameState.student = {
+    ...gameState.student,
+    class: latest.profile.classId,
+    seat: latest.profile.seatNo,
+    name: latest.profile.name,
+    email: latest.profile.email,
+    rosterName: latest.profile.rosterName,
+    registered: true,
+    authenticated: true
+  };
+  gameState.score = latest.score;
+  gameState.stars = latest.stars;
+  gameState.badges = new Set(latest.badges || []);
+  gameState.challenge.seconds = latest.durationSeconds;
+  gameState.challenge.completed = true;
+  gameState.challenge.submissionId = latest.clientSubmissionId;
+
+  document.getElementById('studentClass').value = latest.profile.classId;
+  document.getElementById('studentSeat').value = latest.profile.seatNo;
+  document.getElementById('studentName').value = latest.profile.name;
+  document.getElementById('finalTotalScore').innerText = `${latest.score} 分`;
+  document.getElementById('finalTotalTime').innerText = formatTimeChinese(latest.durationSeconds);
+  updateGlobalDisplay();
+  goToUnit('tab-summary');
+
+  (async () => {
+    for (const record of pending) await uploadPendingScoreRecord(record, true);
+    const remaining = readPendingScoreRecords().filter(record =>
+      record.profile && String(record.profile.email || '').trim().toLowerCase() === email
+    );
+    if (remaining.length) {
+      updateScoreSaveStatus('error', '⚠️', `仍有 ${remaining.length} 筆成績尚未確認儲存；資料保留於此裝置，請稍後重試。`);
+    }
+  })();
+  return true;
+}
+
 function shareScore() {
   sounds.click();
   const name = document.getElementById('studentName').value || '歷史探險家';
@@ -1233,4 +1386,5 @@ window.addEventListener('DOMContentLoaded', () => {
   initQuizGame();
   initDetectiveGame();
   updateCertificate();
+  restorePendingScoresForStudent();
 });

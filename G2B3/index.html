@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260929-score-save">
 </head>
 <body>
   <!-- 音效靜音控制 -->
@@ -569,8 +569,8 @@
 
              <!-- Google Form 成績登錄提示 -->
              <div id="cloudSyncStatusBox" class="cloud-sync-status-box">
-               <span id="cloudSyncIcon" class="cloud-sync-icon">📷</span>
-             <span id="cloudSyncText" role="status" aria-live="polite">完成後成績將統一保存至 Firebase。</span>
+               <span id="cloudSyncIcon" class="cloud-sync-icon">☁️</span>
+              <span id="cloudSyncText" role="status" aria-live="polite">全部五道主關卡完成後，系統會自動儲存成績。</span>
              </div>
 
             <div class="modal-actions-row">
@@ -631,11 +631,11 @@
         </div>
 
          <div id="certCloudSyncPill" class="cloud-sync-status-box" style="max-width: 600px; margin: 18px auto 0;">
-           <span id="certCloudSyncIcon" class="cloud-sync-icon">📷</span>
-           <span id="certCloudSyncText" role="status" aria-live="polite">完成後成績將統一保存至 Firebase。</span>
+           <span id="certCloudSyncIcon" class="cloud-sync-icon">☁️</span>
+           <span id="certCloudSyncText" role="status" aria-live="polite">全部五道主關卡完成後，系統會自動儲存成績。</span>
          </div>
-         <div style="text-align: center; margin: 12px;">
-           <button type="button" onclick="openScoreForm()">☁️ 儲存成績至 Firebase</button>
+         <div class="score-save-action">
+           <button type="button" id="saveScoreButton" class="primary-btn gold-bg big-btn score-save-btn" onclick="openScoreForm()">☁️ 手動儲存成績至 Firebase</button>
          </div>
 
         <div class="summary-actions">
@@ -738,7 +738,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="../firebase-config.js"></script>
   <script src="../firebase-service.js"></script>
-  <script src="app.js?v=20260921-form3"></script>
+  <script src="app.js?v=20260929-score-save"></script>
   <script src="detective.js"></script>
   <script src="maze-scene.bundle.js"></script>
   <script src="maze-adventure.js"></script>
