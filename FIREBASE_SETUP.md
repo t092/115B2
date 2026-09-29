@@ -74,11 +74,39 @@ unitName
 totalScore
 ```
 
-## 6. 載入方式
+## 6. 教師管理帳號
+
+教師管理頁位於 `teacher/index.html`，首頁右下角「教師管理」按鈕可進入。教師使用 Firebase Authentication Email/Password 帳號登入，教師帳號不可由管理頁自行註冊。
+
+建立或授權教師帳號：
+
+1. Authentication → Sign-in method → 啟用 Email/Password。
+2. Authentication → Users → Add user，建立教師 Email 與密碼。
+3. 複製該帳號的 UID。
+4. Firestore Database → Data 建立 `teachers/{UID}` 文件，欄位設定為：
+
+   ```text
+   role: "teacher"   (string)
+   active: true       (boolean)
+   ```
+
+5. 部署 Firestore Rules：
+
+   ```powershell
+   npx firebase deploy --only firestore:rules
+   ```
+
+Rules 會以已登入帳號的 UID 查詢 `teachers/{UID}`，只有 `role` 為 `teacher` 且 `active` 為 `true` 才能管理名冊及讀取成績。教師角色文件由專案管理者在 Console 維護，前端不能自行授權。停用權限時，將 `active` 設為 `false` 或刪除角色文件；需要同時停用帳號時，請在 Authentication 停用或刪除該使用者。
+
+忘記密碼可由 Authentication Console 重設，或之後再加入 Firebase Auth 密碼重設郵件功能。教師密碼不存於程式碼或 Firestore。
+
+成績表固定列出 `teacher/teacher.js` 中的單元目錄；新增課程時，需在該目錄加入欄位標籤，並將新 `unitName` 加入 `firebase-rules/firestore.rules` 成績白名單。若成績資料中出現目錄外的單元，頁面會以 `unitName` 自動追加欄位。
+
+## 7. 載入方式
 
 各遊戲頁面會載入 Firebase compat SDK、`firebase-config.js` 與 `firebase-service.js`。目前設定為空白時，服務會停用，遊戲仍可進入，但不會寫入 Firebase。
 
-## 7. 本機測試
+## 8. 本機測試
 
 不要直接以 `file://` 測試 Firebase 寫入。請使用本機 HTTP 伺服器，例如：
 
@@ -94,7 +122,7 @@ http://localhost:8080/
 
 並將 `localhost` 加入 Firebase Authentication 的授權網域。
 
-## 8. 重要限制
+## 9. 重要限制
 
 - Firestore Rules 可限制資料格式與匿名工作階段，但不能證明學生本人身分。
 - 前端分數仍可能被竄改，不能視為高可信度防作弊系統。

@@ -1,0 +1,63 @@
+.teacher-entry {
+  position: fixed;
+  right: max(22px, env(safe-area-inset-right));
+  bottom: max(22px, env(safe-area-inset-bottom));
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 54px;
+  padding: 0 18px 0 12px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 999px;
+  background: #173c50;
+  box-shadow: 0 12px 28px rgba(20, 54, 72, .25), 0 2px 5px rgba(20, 54, 72, .18);
+  color: #fff;
+  font: 700 15px/1 'Microsoft JhengHei', sans-serif;
+  letter-spacing: .04em;
+  text-decoration: none;
+  transition: transform .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
+
+.teacher-entry:hover {
+  transform: translateY(-3px);
+  background: #245a6b;
+  box-shadow: 0 16px 32px rgba(20, 54, 72, .3), 0 3px 7px rgba(20, 54, 72, .18);
+}
+
+.teacher-entry:focus-visible {
+  outline: 3px solid #f0c66d;
+  outline-offset: 4px;
+}
+
+.teacher-entry__icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: #f0c66d;
+  color: #173c50;
+  font-size: 17px;
+}
+
+.teacher-entry__arrow {
+  margin-left: 1px;
+  color: #b8d9d3;
+  font-size: 17px;
+  transition: transform .2s ease;
+}
+
+.teacher-entry:hover .teacher-entry__arrow {
+  transform: translate(2px, -2px);
+}
+
+@media (max-width: 520px) {
+  .teacher-entry {
+    right: max(14px, env(safe-area-inset-right));
+    bottom: max(14px, env(safe-area-inset-bottom));
+    min-height: 48px;
+    padding-right: 14px;
+    font-size: 14px;
+  }
+}

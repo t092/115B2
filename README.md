@@ -66,6 +66,14 @@ npm run test:browser
 - Firestore Rules 驗證匿名工作階段、名冊 Email、班級座號對應與分數範圍。
 - 分數目前仍由前端計算；Rules 檢查不等同伺服器重新計分或完整防作弊。
 
+## 教師管理
+
+首頁右下角的「教師管理」連結進入 `teacher/index.html`，教師可用已授權的 Firebase Email/Password 帳號管理學生名冊及檢視成績總表。教師權限由 Firestore `teachers/{uid}` 文件上的 `role: "teacher"`、`active: true` 控制；帳號與角色文件需由專案管理者在 Firebase Console 建立，不能從前端自行註冊或授權。
+
+設定與部署步驟見 [FIREBASE_SETUP.md](FIREBASE_SETUP.md#6-教師管理帳號)。新增成績單元時，須同步更新 `teacher/teacher.js` 單元目錄與 Firestore Rules 的 `unitName` 白名單。
+
+設計與功能規劃見 [TEACHER_MANAGEMENT_PLAN.md](TEACHER_MANAGEMENT_PLAN.md)。
+
 部署步驟見 [G2B3/gas/README.md](G2B3/gas/README.md)。前後端必須配套更新，舊版 GAS 不支援新的憑證驗證與回執。
 
 `graphify-out/` 為可重建的分析輸出，已排除 Git 追蹤。分析自有程式時應排除 `vendor/`、`maze-scene.bundle.js`、`gas/Forge.js` 與 `node_modules/`，避免第三方程式淹沒課程邏輯。

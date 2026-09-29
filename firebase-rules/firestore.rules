@@ -2,10 +2,25 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isTeacher() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && exists(/databases/$(database)/documents/teachers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/teachers/$(request.auth.uid)).data.role == 'teacher'
+        && get(/databases/$(database)/documents/teachers/$(request.auth.uid)).data.active == true;
+    }
+
+    match /teachers/{uid} {
+      // 教師帳號與角色文件由專案管理者在 Firebase Console 維護。
+      // 用戶只能讀取自己的角色文件，不能自行授予或移除教師權限。
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+
     match /students/{email} {
       allow get: if request.auth != null;
-      allow list: if false;
-      allow create, update, delete: if false;
+      allow list: if isTeacher();
+      allow create, update, delete: if isTeacher();
     }
 
     match /scores/{scoreId} {
@@ -47,10 +62,10 @@ service cloud.firestore {
       // 成績包含個資，第一階段不直接開放查詢排行榜。
       // 排行榜應改由教師核對後的安全彙總資料提供。
       // Only the submitting session may verify its own Silk Road receipt.
-      allow get: if request.auth != null
+      allow get: if isTeacher() || (request.auth != null
         && resource.data.unitName == 'silklemmings'
-        && resource.data.uid == request.auth.uid;
-      allow list: if false;
+        && resource.data.uid == request.auth.uid);
+      allow list: if isTeacher();
 
       allow update, delete: if false;
     }

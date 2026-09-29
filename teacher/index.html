@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#edf4f2">
+  <meta name="description" content="教師管理學生名冊與學習成績。">
+  <title>教師管理｜歷史闖關學習樂園</title>
+  <link rel="stylesheet" href="teacher.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="masthead">
+      <a class="wordmark" href="../index.html" aria-label="回到學習首頁">
+        <span class="wordmark__seal" aria-hidden="true">史</span>
+        <span><small>HISTORY LEARNING HUB</small><strong>教師管理室</strong></span>
+      </a>
+      <a class="back-link" href="../index.html"><span aria-hidden="true">←</span> 回學習首頁</a>
+    </header>
+
+    <main>
+      <section class="login-layout" id="loginPanel" aria-labelledby="loginTitle">
+        <div class="login-intro">
+          <p class="kicker">TEACHER DESK · 115 學年度</p>
+          <h1 id="loginTitle">讓每一份<br><em>學習歷程</em>清晰可見。</h1>
+          <p class="intro-copy">管理學生名冊，快速檢視各課程的最高成績。請使用已授權的教師帳號登入。</p>
+          <div class="intro-stamp"><span>名冊</span><span>成績</span><span>教學紀錄</span></div>
+        </div>
+        <form class="login-card" id="loginForm">
+          <div class="card-index">01 / SECURE ACCESS</div>
+          <h2>教師登入</h2>
+          <p>使用 Firebase Authentication 教師帳號。</p>
+          <label for="teacherEmail">教師 Email</label>
+          <input id="teacherEmail" name="email" type="email" autocomplete="username" required placeholder="teacher@school.edu.tw">
+          <label for="teacherPassword">密碼</label>
+          <input id="teacherPassword" name="password" type="password" autocomplete="current-password" required>
+          <button class="button button--primary login-submit" id="loginSubmit" type="submit">登入管理室 <span aria-hidden="true">↗</span></button>
+          <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
+          <p class="login-footnote"><span aria-hidden="true">●</span> 僅限已授權教師帳號使用</p>
+        </form>
+      </section>
+
+      <section class="dashboard" id="dashboard" hidden aria-labelledby="dashboardTitle">
+        <div class="dashboard-heading">
+          <div>
+            <p class="kicker">TEACHER DESK / OVERVIEW</p>
+            <h1 id="dashboardTitle">管理總覽<span class="heading-dot">.</span></h1>
+            <p class="dashboard-subtitle">名冊與課程成績，集中在這裡整理。</p>
+          </div>
+          <div class="teacher-account">
+            <span class="account-mark" aria-hidden="true">教</span>
+            <span class="account-email" id="teacherAccountEmail"></span>
+            <button class="button button--quiet" id="logoutButton" type="button">登出</button>
+          </div>
+        </div>
+
+        <div class="overview-strip" aria-label="資料摘要">
+          <div><span class="metric-label">在冊學生</span><strong id="studentCount">—</strong></div>
+          <div><span class="metric-label">班級數</span><strong id="classCount">—</strong></div>
+          <div><span class="metric-label">成績紀錄</span><strong id="scoreCount">尚未載入</strong></div>
+          <p>成績表每位學生、每個單元顯示最高總分。</p>
+        </div>
+
+        <nav class="section-tabs" aria-label="管理功能">
+          <button class="tab-button is-active" id="rosterTab" type="button" aria-selected="true" aria-controls="rosterPanel">
+            <span class="tab-number">A</span>學生名冊
+          </button>
+          <button class="tab-button" id="scoresTab" type="button" aria-selected="false" aria-controls="scoresPanel">
+            <span class="tab-number">B</span>成績總表
+          </button>
+        </nav>
+
+        <section class="workspace" id="rosterPanel" aria-labelledby="rosterTitle">
+          <div class="workspace-heading">
+            <div><p class="kicker">ROSTER / STUDENTS</p><h2 id="rosterTitle">學生名冊</h2></div>
+            <button class="button button--primary" id="addStudentButton" type="button"><span aria-hidden="true">＋</span> 新增學生</button>
+          </div>
+          <div class="toolbar">
+            <label class="filter-field"><span>班級</span><select id="rosterClassFilter"><option value="">全部班級</option></select></label>
+            <label class="search-field"><span class="sr-only">搜尋名冊</span><span aria-hidden="true">⌕</span><input id="rosterSearch" type="search" placeholder="搜尋姓名、座號或 Email"></label>
+            <span class="result-count" id="rosterResultCount"></span>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table roster-table">
+              <thead><tr><th>班級</th><th>座號</th><th>姓名</th><th>Email</th><th class="actions-heading">管理</th></tr></thead>
+              <tbody id="rosterBody"><tr><td colspan="5" class="empty-cell">登入後載入名冊</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="workspace" id="scoresPanel" aria-labelledby="scoresTitle" hidden>
+          <div class="workspace-heading">
+            <div><p class="kicker">ASSESSMENT / RESULTS</p><h2 id="scoresTitle">成績總表</h2></div>
+            <button class="button button--outline" id="refreshScoresButton" type="button"><span aria-hidden="true">↻</span> 更新成績</button>
+          </div>
+          <div class="toolbar">
+            <label class="filter-field"><span>班級</span><select id="scoresClassFilter"><option value="">全部班級</option></select></label>
+            <label class="search-field"><span class="sr-only">搜尋成績</span><span aria-hidden="true">⌕</span><input id="scoresSearch" type="search" placeholder="搜尋姓名、座號或 Email"></label>
+            <span class="result-count" id="scoresResultCount"></span>
+          </div>
+          <p class="table-note"><span aria-hidden="true">↗</span> 每位學生每個課程顯示最高總分；沒有成績的欄位以「—」表示。</p>
+          <div class="table-wrap table-wrap--scores">
+            <table class="data-table scores-table">
+              <thead id="scoresHead"></thead>
+              <tbody id="scoresBody"><tr><td class="empty-cell">切換至成績總表後載入資料</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="dashboard-footer"><span>HISTORY LEARNING HUB</span><span>學生名冊與成績僅供授權教師管理</span></footer>
+      </section>
+    </main>
+  </div>
+
+  <dialog class="student-dialog" id="studentDialog" aria-labelledby="studentDialogTitle">
+    <form id="studentForm" method="dialog">
+      <div class="dialog-topline"><span class="kicker">ROSTER / EDIT RECORD</span><button class="icon-button" id="closeDialogButton" type="button" aria-label="關閉">×</button></div>
+      <h2 id="studentDialogTitle">新增學生</h2>
+      <p class="dialog-copy">Email 作為學生名冊的識別碼。</p>
+      <label for="studentEmail">學習帳號 Email</label><input id="studentEmail" name="email" type="email" autocomplete="off" required>
+      <div class="form-grid">
+        <div><label for="studentClass">班級</label><input id="studentClass" name="class" required maxlength="12" placeholder="例如 701"></div>
+        <div><label for="studentSeat">座號</label><input id="studentSeat" name="seat" required maxlength="12" placeholder="例如 1"></div>
+      </div>
+      <label for="studentName">姓名</label><input id="studentName" name="name" required maxlength="40">
+      <p class="form-message" id="studentFormMessage" role="status" aria-live="polite"></p>
+      <div class="dialog-actions"><button class="button button--quiet" id="cancelStudentButton" type="button">取消</button><button class="button button--primary" id="saveStudentButton" type="submit">儲存學生資料</button></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <script src="../firebase-service.js"></script>
+  <script src="teacher.js"></script>
+</body>
+</html>
