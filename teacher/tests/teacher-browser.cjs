@@ -86,10 +86,39 @@ const {pathToFileURL} = require('node:url');
     const firstScoreRow = page.locator('#scoresBody tr').filter({hasText: '林新同學'});
     assert.match(await firstScoreRow.innerText(), /91/);
     assert.match(await page.locator('#scoresBody').innerText(), /已離冊學生/);
+
+    await page.locator('#exportClassSelect').selectOption('701');
+    await page.locator('#clearCourses').click();
+    await page.locator('#exportCourseOptions input[value="G2B3"]').check();
+    await page.locator('#exportCourseOptions input[value="FutureCourse"]').check();
+    await page.evaluate(() => {
+      window.__csvDownload = {};
+      URL.createObjectURL = blob => {
+        window.__csvDownload.blob = blob;
+        return 'blob:teacher-export-test';
+      };
+      URL.revokeObjectURL = () => {};
+      HTMLAnchorElement.prototype.click = function captureDownload() {
+        window.__csvDownload.filename = this.download;
+      };
+    });
+    await page.getByRole('button', {name: /下載 CSV/}).click();
+    const download = await page.evaluate(async () => ({
+      filename: window.__csvDownload.filename,
+      bytes: Array.from(new Uint8Array(await window.__csvDownload.blob.arrayBuffer())),
+      text: await window.__csvDownload.blob.text()
+    }));
+    assert.match(download.filename, /^701班_成績總表_\d{8}\.csv$/);
+    assert.deepEqual(download.bytes.slice(0, 3), [239, 187, 191]);
+    assert.match(download.text, /^"班級","座號","姓名","課程1總成績","FutureCourse總成績"/);
+    assert.doesNotMatch(download.text, /課程2總成績/);
+    assert.match(download.text, /"701","1","林新同學","91","78"/);
+    assert.match(download.text, /"701","2","已離冊學生","75","—"/);
+
     await page.setViewportSize({width: 390, height: 844});
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'teacher dashboard should not overflow the mobile viewport');
     assert.deepEqual(errors, []);
-    console.log('PASS teacher UI: homepage entry, login, roster add, highest score, dynamic unit and retained historical result');
+    console.log('PASS teacher UI: roster management, highest score, dynamic units and class/course CSV export');
   } finally {
     await browser.close();
   }

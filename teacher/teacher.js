@@ -124,8 +124,15 @@
       ).join('');
       if (sorted.includes(selected)) select.value = selected;
     }
+    const exportClass = $('exportClassSelect');
+    const selectedExportClass = exportClass.value;
+    exportClass.innerHTML = '<option value="">請選擇班級</option>' + sorted.map(classId =>
+      `<option value="${escapeHtml(classId)}">${escapeHtml(classId)} 班</option>`
+    ).join('');
+    if (sorted.includes(selectedExportClass)) exportClass.value = selectedExportClass;
     $('studentCount').textContent = state.students.length.toLocaleString('zh-TW');
     $('classCount').textContent = sorted.length.toLocaleString('zh-TW');
+    updateExportButton();
   }
 
   async function loadStudents() {
@@ -312,6 +319,7 @@
         .sort(compareText)
         .map(id => ({ id, label: `${id}總成績` }))
     ];
+    renderExportOptions(units);
     $('scoresHead').innerHTML = `<tr><th>班級</th><th>座號</th><th>姓名</th>${units.map(unit => `<th title="${escapeHtml(unit.id)}">${escapeHtml(unit.label)}</th>`).join('')}</tr>`;
 
     const classId = $('scoresClassFilter').value;
@@ -340,6 +348,89 @@
           : `<td class="score-value">${escapeHtml(Number(score).toLocaleString('zh-TW'))}</td>`;
       }).join('')}
     </tr>`).join('');
+  }
+
+  function renderExportOptions(units) {
+    const container = $('exportCourseOptions');
+    const previousInputs = Array.from(container.querySelectorAll('input[type="checkbox"]'));
+    const previousIds = new Set(previousInputs.map(input => input.value));
+    const previouslyChecked = new Set(previousInputs.filter(input => input.checked).map(input => input.value));
+    container.innerHTML = units.map(unit => {
+      const checked = previousIds.has(unit.id) ? previouslyChecked.has(unit.id) : true;
+      return `<label class="course-option"><input type="checkbox" value="${escapeHtml(unit.id)}"${checked ? ' checked' : ''}><span>${escapeHtml(unit.label)}</span></label>`;
+    }).join('');
+    container.querySelectorAll('input').forEach(input => input.addEventListener('change', updateExportButton));
+    updateExportButton();
+  }
+
+  function updateExportButton() {
+    const classSelected = $('exportClassSelect') && $('exportClassSelect').value;
+    const selectedCourses = $('exportCourseOptions')
+      ? $('exportCourseOptions').querySelectorAll('input[type="checkbox"]:checked').length
+      : 0;
+    const button = $('exportCsvButton');
+    if (!button) return;
+    button.disabled = !classSelected || !selectedCourses || !Array.isArray(state.scores);
+    if ($('exportHint')) {
+      $('exportHint').classList.remove('is-error');
+      $('exportHint').textContent = classSelected
+        ? `已選 ${selectedCourses} 門課程；匯出該班全體名冊及歷史成績，搜尋條件不會影響輸出。`
+        : '請先選擇班級，再勾選要輸出的課程。CSV 使用 UTF-8 編碼，適合以試算表開啟。';
+    }
+  }
+
+  function csvCell(value, isText = false) {
+    let text = String(value ?? '');
+    if (isText && /^[\s]*[=+\-@]/.test(text)) text = `'${text}`;
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  function exportScoresCsv() {
+    const classId = $('exportClassSelect').value;
+    const selectedUnits = Array.from($('exportCourseOptions').querySelectorAll('input[type="checkbox"]:checked'))
+      .map(input => input.value);
+    if (!classId || !selectedUnits.length || !Array.isArray(state.scores)) {
+      $('exportHint').textContent = '請選擇一個班級及至少一門課程。';
+      $('exportHint').classList.add('is-error');
+      return;
+    }
+
+    const units = [
+      ...UNIT_CATALOG,
+      ...Array.from(new Set(state.scores.map(score => String(score.unitName || '').trim()).filter(Boolean)))
+        .filter(unit => !UNIT_LABELS.has(unit))
+        .sort(compareText)
+        .map(id => ({ id, label: `${id}總成績` }))
+    ].filter(unit => selectedUnits.includes(unit.id));
+    const rows = buildScoreRows().filter(row => row.class === classId)
+      .sort((a, b) => compareText(a.class, b.class) || compareText(a.seat, b.seat) || compareText(a.name, b.name));
+    const csvRows = [
+      ['班級', '座號', '姓名', ...units.map(unit => unit.label)].map(value => csvCell(value, true)).join(','),
+      ...rows.map(row => [
+        csvCell(row.class, true),
+        csvCell(row.seat, true),
+        csvCell(row.name, true),
+        ...units.map(unit => {
+          const score = row.totals.get(unit.id);
+          return score === undefined ? csvCell('—', true) : csvCell(Number(score));
+        })
+      ].join(','))
+    ];
+    const blob = new Blob(['\uFEFF', csvRows.join('\r\n')], {type: 'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const safeClass = classId.replace(/[^\w\u4e00-\u9fff-]/g, '') || '班級';
+    const today = new Date();
+    const date = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    link.href = url;
+    link.download = `${safeClass}班_成績總表_${date}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    $('exportHint').textContent = `已輸出 ${rows.length.toLocaleString('zh-TW')} 位學生、${units.length} 門課程。`;
+    $('exportHint').classList.remove('is-error');
+    notify('CSV 成績檔已下載');
   }
 
   async function loadScores(force = false) {
@@ -384,6 +475,16 @@
   $('scoresClassFilter').addEventListener('change', renderScores);
   $('scoresSearch').addEventListener('input', renderScores);
   $('refreshScoresButton').addEventListener('click', () => loadScores(true));
+  $('exportClassSelect').addEventListener('change', updateExportButton);
+  $('exportCsvButton').addEventListener('click', exportScoresCsv);
+  $('selectAllCourses').addEventListener('click', () => {
+    $('exportCourseOptions').querySelectorAll('input[type="checkbox"]').forEach(input => { input.checked = true; });
+    updateExportButton();
+  });
+  $('clearCourses').addEventListener('click', () => {
+    $('exportCourseOptions').querySelectorAll('input[type="checkbox"]').forEach(input => { input.checked = false; });
+    updateExportButton();
+  });
   $('studentForm').addEventListener('submit', saveStudent);
   $('closeDialogButton').addEventListener('click', closeStudentDialog);
   $('cancelStudentButton').addEventListener('click', closeStudentDialog);

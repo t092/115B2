@@ -98,6 +98,21 @@
             <label class="search-field"><span class="sr-only">搜尋成績</span><span aria-hidden="true">⌕</span><input id="scoresSearch" type="search" placeholder="搜尋姓名、座號或 Email"></label>
             <span class="result-count" id="scoresResultCount"></span>
           </div>
+          <section class="export-panel" aria-labelledby="exportTitle">
+            <div class="export-heading">
+              <div><p class="kicker">EXPORT / CLASS REPORT</p><h3 id="exportTitle">輸出班級成績</h3></div>
+              <button class="button button--primary" id="exportCsvButton" type="button" disabled>下載 CSV <span aria-hidden="true">↓</span></button>
+            </div>
+            <div class="export-controls">
+              <label class="filter-field export-class-field"><span>選擇輸出班級</span><select id="exportClassSelect" required><option value="">請選擇班級</option></select></label>
+              <fieldset class="course-picker">
+                <legend>選擇要輸出的課程總成績</legend>
+                <div class="course-picker-tools"><button id="selectAllCourses" type="button">全選</button><span aria-hidden="true">/</span><button id="clearCourses" type="button">全不選</button></div>
+                <div class="course-options" id="exportCourseOptions"><span class="course-empty">載入成績後可選擇課程</span></div>
+              </fieldset>
+            </div>
+            <p class="export-hint" id="exportHint">CSV 使用 UTF-8 編碼，適合以試算表開啟。</p>
+          </section>
           <p class="table-note"><span aria-hidden="true">↗</span> 每位學生每個課程顯示最高總分；沒有成績的欄位以「—」表示。</p>
           <div class="table-wrap table-wrap--scores">
             <table class="data-table scores-table">

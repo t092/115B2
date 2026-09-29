@@ -68,7 +68,7 @@ npm run test:browser
 
 ## 教師管理
 
-首頁右下角的「教師管理」連結進入 `teacher/index.html`，教師可用已授權的 Firebase Email/Password 帳號管理學生名冊及檢視成績總表。教師權限由 Firestore `teachers/{uid}` 文件上的 `role: "teacher"`、`active: true` 控制；帳號與角色文件需由專案管理者在 Firebase Console 建立，不能從前端自行註冊或授權。
+首頁右下角的「教師管理」連結進入 `teacher/index.html`，教師可用已授權的 Firebase Email/Password 帳號管理學生名冊、檢視各課程最高成績，並選班級及課程匯出 CSV。教師權限由 Firestore `teachers/{uid}` 文件上的 `role: "teacher"`、`active: true` 控制；帳號與角色文件需由專案管理者在 Firebase Console 建立，不能從前端自行註冊或授權。
 
 設定與部署步驟見 [FIREBASE_SETUP.md](FIREBASE_SETUP.md#6-教師管理帳號)。新增成績單元時，須同步更新 `teacher/teacher.js` 單元目錄與 Firestore Rules 的 `unitName` 白名單。
 
