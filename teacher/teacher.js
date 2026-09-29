@@ -363,19 +363,27 @@
     updateExportButton();
   }
 
+  function selectedExportUnitIds() {
+    const container = $('exportCourseOptions');
+    if (!container) return [];
+    return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value);
+  }
+
   function updateExportButton() {
     const classSelected = $('exportClassSelect') && $('exportClassSelect').value;
-    const selectedCourses = $('exportCourseOptions')
-      ? $('exportCourseOptions').querySelectorAll('input[type="checkbox"]:checked').length
-      : 0;
+    const selectedCourses = selectedExportUnitIds().length;
     const button = $('exportCsvButton');
     if (!button) return;
-    button.disabled = !classSelected || !selectedCourses || !Array.isArray(state.scores);
+    button.disabled = !classSelected || selectedCourses === 0;
     if ($('exportHint')) {
       $('exportHint').classList.remove('is-error');
-      $('exportHint').textContent = classSelected
-        ? `已選 ${selectedCourses} 門課程；匯出該班全體名冊及歷史成績，搜尋條件不會影響輸出。`
-        : '請先選擇班級，再勾選要輸出的課程。CSV 使用 UTF-8 編碼，適合以試算表開啟。';
+      if (!classSelected) {
+        $('exportHint').textContent = '請先選擇班級，再勾選要輸出的課程。CSV 使用 UTF-8 編碼，適合以試算表開啟。';
+      } else if (selectedCourses === 0) {
+        $('exportHint').textContent = '請至少勾選一門要輸出的課程。';
+      } else {
+        $('exportHint').textContent = `已選 ${selectedCourses} 門課程；匯出該班全體名冊及歷史成績，搜尋條件不會影響輸出。`;
+      }
     }
   }
 
@@ -385,52 +393,75 @@
     return `"${text.replace(/"/g, '""')}"`;
   }
 
-  function exportScoresCsv() {
+  function downloadCsv(filename, content) {
+    const blob = new Blob(['\uFEFF', content], {type: 'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  async function exportScoresCsv() {
+    const button = $('exportCsvButton');
     const classId = $('exportClassSelect').value;
-    const selectedUnits = Array.from($('exportCourseOptions').querySelectorAll('input[type="checkbox"]:checked'))
-      .map(input => input.value);
-    if (!classId || !selectedUnits.length || !Array.isArray(state.scores)) {
+    const selectedUnits = selectedExportUnitIds();
+    if (!classId || selectedUnits.length === 0) {
       $('exportHint').textContent = '請選擇一個班級及至少一門課程。';
       $('exportHint').classList.add('is-error');
       return;
     }
 
-    const units = [
-      ...UNIT_CATALOG,
-      ...Array.from(new Set(state.scores.map(score => String(score.unitName || '').trim()).filter(Boolean)))
-        .filter(unit => !UNIT_LABELS.has(unit))
-        .sort(compareText)
-        .map(id => ({ id, label: `${id}總成績` }))
-    ].filter(unit => selectedUnits.includes(unit.id));
-    const rows = buildScoreRows().filter(row => row.class === classId)
-      .sort((a, b) => compareText(a.class, b.class) || compareText(a.seat, b.seat) || compareText(a.name, b.name));
-    const csvRows = [
-      ['班級', '座號', '姓名', ...units.map(unit => unit.label)].map(value => csvCell(value, true)).join(','),
-      ...rows.map(row => [
-        csvCell(row.class, true),
-        csvCell(row.seat, true),
-        csvCell(row.name, true),
-        ...units.map(unit => {
-          const score = row.totals.get(unit.id);
-          return score === undefined ? csvCell('—', true) : csvCell(Number(score));
-        })
-      ].join(','))
-    ];
-    const blob = new Blob(['\uFEFF', csvRows.join('\r\n')], {type: 'text/csv;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const safeClass = classId.replace(/[^\w\u4e00-\u9fff-]/g, '') || '班級';
-    const today = new Date();
-    const date = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-    link.href = url;
-    link.download = `${safeClass}班_成績總表_${date}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    $('exportHint').textContent = `已輸出 ${rows.length.toLocaleString('zh-TW')} 位學生、${units.length} 門課程。`;
-    $('exportHint').classList.remove('is-error');
-    notify('CSV 成績檔已下載');
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.textContent = '準備中…';
+    try {
+      if (!Array.isArray(state.scores)) {
+        await loadScores(true);
+      }
+      if (!Array.isArray(state.scores)) throw new Error('成績尚未載入，請稍後再試或確認教師權限');
+
+      const units = [
+        ...UNIT_CATALOG,
+        ...Array.from(new Set(state.scores.map(score => String(score.unitName || '').trim()).filter(Boolean)))
+          .filter(unit => !UNIT_LABELS.has(unit))
+          .sort(compareText)
+          .map(id => ({ id, label: `${id}總成績` }))
+      ].filter(unit => selectedUnits.includes(unit.id));
+      const rows = buildScoreRows().filter(row => row.class === classId)
+        .sort((a, b) => compareText(a.class, b.class) || compareText(a.seat, b.seat) || compareText(a.name, b.name));
+      const csvRows = [
+        ['班級', '座號', '姓名', ...units.map(unit => unit.label)].map(value => csvCell(value, true)).join(','),
+        ...rows.map(row => [
+          csvCell(row.class, true),
+          csvCell(row.seat, true),
+          csvCell(row.name, true),
+          ...units.map(unit => {
+            const score = row.totals.get(unit.id);
+            return score === undefined ? csvCell('—', true) : csvCell(Number(score));
+          })
+        ].join(','))
+      ];
+      const safeClass = classId.replace(/[^\w\u4e00-\u9fff-]/g, '') || '班級';
+      const today = new Date();
+      const date = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+      downloadCsv(`${safeClass}班_成績總表_${date}.csv`, csvRows.join('\r\n'));
+      $('exportHint').textContent = `已輸出 ${rows.length.toLocaleString('zh-TW')} 位學生、${units.length} 門課程。`;
+      $('exportHint').classList.remove('is-error');
+      notify('CSV 成績檔已下載');
+    } catch (error) {
+      $('exportHint').textContent = error.message || '匯出失敗，請稍後再試';
+      $('exportHint').classList.add('is-error');
+      notify(error.message || '匯出失敗', true);
+    } finally {
+      button.innerHTML = originalText;
+      updateExportButton();
+    }
   }
 
   async function loadScores(force = false) {
@@ -492,5 +523,6 @@
     if (event.target === $('studentDialog')) closeStudentDialog();
   });
 
+  renderExportOptions(UNIT_CATALOG);
   restoreTeacherSession();
 })();

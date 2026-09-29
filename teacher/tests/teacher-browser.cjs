@@ -6,7 +6,8 @@ const {pathToFileURL} = require('node:url');
 (async () => {
   const browser = await chromium.launch({channel: 'msedge', headless: true});
   try {
-    const page = await browser.newPage({viewport: {width: 1280, height: 900}});
+    const context = await browser.newContext({acceptDownloads: true, viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.route('https://**/*', route => route.abort());
@@ -87,33 +88,28 @@ const {pathToFileURL} = require('node:url');
     assert.match(await firstScoreRow.innerText(), /91/);
     assert.match(await page.locator('#scoresBody').innerText(), /已離冊學生/);
 
+    assert.ok(await page.locator('#exportCourseOptions input').count() >= 4);
     await page.locator('#exportClassSelect').selectOption('701');
     await page.locator('#clearCourses').click();
+    assert.ok(await page.locator('#exportCsvButton').isDisabled());
     await page.locator('#exportCourseOptions input[value="G2B3"]').check();
     await page.locator('#exportCourseOptions input[value="FutureCourse"]').check();
-    await page.evaluate(() => {
-      window.__csvDownload = {};
-      URL.createObjectURL = blob => {
-        window.__csvDownload.blob = blob;
-        return 'blob:teacher-export-test';
-      };
-      URL.revokeObjectURL = () => {};
-      HTMLAnchorElement.prototype.click = function captureDownload() {
-        window.__csvDownload.filename = this.download;
-      };
-    });
+    assert.ok(!(await page.locator('#exportCsvButton').isDisabled()));
+
+    const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', {name: /下載 CSV/}).click();
-    const download = await page.evaluate(async () => ({
-      filename: window.__csvDownload.filename,
-      bytes: Array.from(new Uint8Array(await window.__csvDownload.blob.arrayBuffer())),
-      text: await window.__csvDownload.blob.text()
-    }));
-    assert.match(download.filename, /^701班_成績總表_\d{8}\.csv$/);
-    assert.deepEqual(download.bytes.slice(0, 3), [239, 187, 191]);
-    assert.match(download.text, /^"班級","座號","姓名","課程1總成績","FutureCourse總成績"/);
-    assert.doesNotMatch(download.text, /課程2總成績/);
-    assert.match(download.text, /"701","1","林新同學","91","78"/);
-    assert.match(download.text, /"701","2","已離冊學生","75","—"/);
+    const download = await downloadPromise;
+    const stream = await download.createReadStream();
+    const chunks = [];
+    for await (const chunk of stream) chunks.push(chunk);
+    const content = Buffer.concat(chunks);
+    assert.match(download.suggestedFilename(), /^701班_成績總表_\d{8}\.csv$/);
+    assert.deepEqual([...content.subarray(0, 3)], [239, 187, 191]);
+    const csvText = content.toString('utf8').replace(/^\uFEFF/, '');
+    assert.match(csvText, /^"班級","座號","姓名","課程1總成績","FutureCourse總成績"/);
+    assert.doesNotMatch(csvText, /課程2總成績/);
+    assert.match(csvText, /"701","1","林新同學","91","78"/);
+    assert.match(csvText, /"701","2","已離冊學生","75","—"/);
 
     await page.setViewportSize({width: 390, height: 844});
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'teacher dashboard should not overflow the mobile viewport');
